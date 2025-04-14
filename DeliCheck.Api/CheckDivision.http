@@ -1,0 +1,10 @@
+@CheckDivision_HostAddress = http://localhost:5171
+
+GET {{CheckDivision_HostAddress}}/auth/register
+Accept: application/json
+Content-Type: application/json
+
+
+{ "" }
+
+###
