@@ -1,6 +1,4 @@
-﻿
-using DeliCheck.Models;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace DeliCheck.Schemas.Responses
 {
@@ -9,22 +7,6 @@ namespace DeliCheck.Schemas.Responses
     /// </summary>
     public class InvoiceResponseModel
     {
-        public static InvoiceResponseModel FromModel(InvoiceModel model, DatabaseContext db)
-        {
-            return new InvoiceResponseModel() 
-            {
-                BillsCreated = model.BillsCreated,
-                CreatedTime = model.CreatedTime,
-                Id = model.Id,
-                FromFns = model.FromFns,
-                Items = db.InvoicesItems.Where(x => x.InvoiceId == model.Id).Select(x => new InvoiceItemResponseModel() { Cost = x.Cost, Id = x.Id, Count = x.Count, Name = x.Name }).ToList(),
-                Name = model.Name,
-                OCRText = model.OCRText,
-                TotalCost = model.TotalCost,
-                OwnerId = model.OwnerId
-            };
-        }
-
         /// <summary>
         /// Идентификатор
         /// </summary>

@@ -138,7 +138,6 @@ namespace DeliCheck.Services
             var json = JsonNode.Parse(text);
 
             var items = json?["response"]?["items"]?.AsArray();
-            Console.WriteLine(text);
             if(items != null)
             {
                 using (var db = new DatabaseContext())
@@ -178,7 +177,6 @@ namespace DeliCheck.Services
                                     OwnerId = authData.UserId,
                                     HasAvatar = avatarUrl != null
                                 };
-                                Console.WriteLine(avatarUrl);
                                 db.OfflineFriends.Add(newFriend);
                                 await db.SaveChangesAsync();
                                 if (avatarUrl != null)

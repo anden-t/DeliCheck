@@ -30,13 +30,13 @@ namespace DeliCheck.Controllers
         /// <param name="userId">Идентификатор пользователя, которого необходимо добавить в друзья</param>
         /// <returns></returns>
         [HttpGet("add")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> AddFriendAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int userId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
@@ -51,9 +51,9 @@ namespace DeliCheck.Controllers
 
                     await db.SaveChangesAsync();
 
-                    return Ok(ResponseBase.Success());
+                    return Ok(ApiResponse.Success());
                 }
-                else return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                else return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
             }
         }
 
@@ -64,13 +64,13 @@ namespace DeliCheck.Controllers
         /// <param name="userId">Идентификатор пользователя, которого необходимо удалить из друзей</param>
         /// <returns></returns>
         [HttpGet("remove")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> RemoveFriendAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int userId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
@@ -83,12 +83,12 @@ namespace DeliCheck.Controllers
                     {
                         db.Friends.Remove(friend);
                         await db.SaveChangesAsync();
-                        return Ok(ResponseBase.Success());
+                        return Ok(ApiResponse.Success());
                     }
-                    else return BadRequest(ResponseBase.Failure("Друг с таким userId не найден"));
+                    else return BadRequest(ApiResponse.Failure("Друг с таким userId не найден"));
 
                 }
-                else return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                else return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
             }
         }
 
@@ -99,22 +99,22 @@ namespace DeliCheck.Controllers
         /// <param name="request">Тело запроса</param>
         /// <returns></returns>
         [HttpPost("add-offline")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> AddOfflineFriendAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [FromBody][Required] AddOfflineFriendRequest request)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             request.Firstname = request.Lastname.Trim();
             request.Lastname = request.Firstname.Trim();
 
             if (string.IsNullOrEmpty(request.Firstname) && string.IsNullOrEmpty(request.Lastname))
-                return BadRequest(ResponseBase.Failure("Фамилия и имя не должны быть одновременно пустые"));
+                return BadRequest(ApiResponse.Failure("Фамилия и имя не должны быть одновременно пустые"));
 
             if (request.Firstname.Length > 20 || request.Lastname.Length > 20)
-                return BadRequest(ResponseBase.Failure("Длина имени или фамилии не должна превышать 20 символов"));
+                return BadRequest(ApiResponse.Failure("Длина имени или фамилии не должна превышать 20 символов"));
 
             using (var db = new DatabaseContext())
             {
@@ -129,7 +129,7 @@ namespace DeliCheck.Controllers
 
                 await db.SaveChangesAsync();
 
-                return Ok(ResponseBase.Success());
+                return Ok(ApiResponse.Success());
             }
         }
 
@@ -140,13 +140,13 @@ namespace DeliCheck.Controllers
         /// <param name="friendLabelId">Идентификатор записи о друге, которую необходимо удалить</param>
         /// <returns></returns>
         [HttpGet("remove-offline")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> RemoveOffineFriendAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int friendLabelId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
@@ -156,9 +156,9 @@ namespace DeliCheck.Controllers
                 {
                     db.OfflineFriends.Remove(friend);
                     await db.SaveChangesAsync();
-                    return Ok(ResponseBase.Success());
+                    return Ok(ApiResponse.Success());
                 }
-                else return BadRequest(ResponseBase.Failure("Друг с таким userId не найден"));
+                else return BadRequest(ApiResponse.Failure("Друг с таким userId не найден"));
             }
         }
 
@@ -168,27 +168,27 @@ namespace DeliCheck.Controllers
         /// <param name="sessionToken">Токен сессии</param>
         /// <returns></returns>
         [HttpGet("import-vk")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> ImportVkFriendsAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == token.UserId);
 
-                if (user == null || user.VkId == null) return BadRequest(ResponseBase.Failure("Не найден привязанный профиль ВК"));
+                if (user == null || user.VkId == null) return BadRequest(ApiResponse.Failure("Не найден привязанный профиль ВК"));
 
                 var vkAuthData = db.VkAuth.OrderBy(e => e.CreateTime).LastOrDefault(x => x.UserId == token.UserId);
-                if (vkAuthData == null) return BadRequest(ResponseBase.Failure("Не найден привязанный профиль ВК"));
+                if (vkAuthData == null) return BadRequest(ApiResponse.Failure("Не найден привязанный профиль ВК"));
 
                 await _vkApi.UpdateFriendsListAsync(vkAuthData);
             }
 
-            return Ok(ResponseBase.Success());
+            return Ok(ApiResponse.Success());
         }
 
         /// <summary>
@@ -198,18 +198,18 @@ namespace DeliCheck.Controllers
         /// <param name="query"></param>
         /// <returns></returns>
         [HttpGet("search")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(FriendsListResponse), (int)System.Net.HttpStatusCode.OK)]
         public IActionResult SearchFriends([FromHeader(Name = "x-session-token")][Required] string sessionToken, string query)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             query ??= string.Empty;
 
             using (var db = new DatabaseContext())
             {
-                return Ok(new FriendsListResponse() { Friends = SearchUsers(db, token.UserId, query), OnlyOnline = false, UserId = token.UserId });
+                return Ok(new FriendsListResponse(new FriendsListResponseModel() { Friends = SearchUsers(db, token.UserId, query), OnlyOnline = false, UserId = token.UserId }));
             }
         }
 
@@ -222,13 +222,13 @@ namespace DeliCheck.Controllers
         /// <param name="onlyOnline">True, если необходимо получить список только онлайн друзей</param>
         /// <returns></returns>
         [HttpGet("list")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(FriendsListResponse), (int)System.Net.HttpStatusCode.OK)]
         public IActionResult GetFriendsList([FromHeader(Name = "x-session-token")][Required] string sessionToken, int? userId, bool onlyOnline = false)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             if(userId == null)
                 userId = token.UserId;
@@ -237,8 +237,8 @@ namespace DeliCheck.Controllers
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == userId);
 
-                if (user != null) return Ok(new FriendsListResponse() { Friends = GetFriends(db, user.Id, onlyOnline), UserId = user.Id, OnlyOnline = onlyOnline });
-                else return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                if (user != null) return Ok(new FriendsListResponse(new FriendsListResponseModel() { Friends = GetFriends(db, user.Id, onlyOnline), UserId = user.Id, OnlyOnline = onlyOnline }));
+                else return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
             }
         }
 
@@ -253,18 +253,21 @@ namespace DeliCheck.Controllers
 
             foreach (var user in users)
             {
-                var fUser = db.Friends.FirstOrDefault(x => x.OwnerId == userId && x.FriendId == user.Id);
-                list.Add(new FriendResponseModel()
+                if(user.Id != userId)
                 {
-                    Firstname = user.Firstname,
-                    Lastname = user.Lastname,
-                    FriendLabelId = fUser?.Id ?? -1,
-                    UserId = user.Id,
-                    HasAvatar = user.HasAvatar,
-                    HasProfile = true,
-                    HasVk = user.VkId != null,
-                    VkId = user.VkId
-                });
+                    var fUser = db.Friends.FirstOrDefault(x => x.OwnerId == userId && x.FriendId == user.Id);
+                    list.Add(new FriendResponseModel()
+                    {
+                        Firstname = user.Firstname,
+                        Lastname = user.Lastname,
+                        FriendLabelId = fUser?.Id,
+                        UserId = user.Id,
+                        HasAvatar = user.HasAvatar,
+                        HasProfile = true,
+                        HasVk = user.VkId != null,
+                        VkId = user.VkId
+                    });
+                }
             }
 
             foreach (var offlineFriend in offlineFriends)
@@ -281,7 +284,7 @@ namespace DeliCheck.Controllers
                 });
             }
 
-            return list.OrderByDescending(x => x.FriendLabelId).ToList();
+            return list.OrderByDescending(x => x.FriendLabelId ?? -1).ToList();
         }
 
         private List<FriendResponseModel> GetFriends(DatabaseContext db, int userId, bool onlyOnline)

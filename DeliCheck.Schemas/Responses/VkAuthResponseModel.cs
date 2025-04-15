@@ -5,7 +5,7 @@ namespace DeliCheck.Schemas.Responses
     /// <summary>
     /// Ответ на авторизацию через ВК
     /// </summary>
-    public class VkAuthResponse : ResponseBase
+    public class VkAuthResponseModel
     {
         /// <summary>
         /// URL OAuth авторизации ВК. Приложение должно перебросить пользователя на данный URL.

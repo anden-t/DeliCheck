@@ -57,6 +57,15 @@ var app = builder.Build();
     app.UseSwagger();
     app.UseSwaggerUI();
 //}
+app.UseCors(builder => builder
+         .SetIsOriginAllowed(callerHost
+                => callerHost.Contains("http://localhost:5208") || 
+                    callerHost.Contains("https://deli-check.ru")
+                )
+         .AllowAnyMethod()
+         .AllowAnyHeader()
+         .AllowCredentials()
+     );
 
 app.UseHttpsRedirection();
 

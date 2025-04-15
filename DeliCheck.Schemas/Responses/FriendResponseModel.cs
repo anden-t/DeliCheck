@@ -2,6 +2,9 @@
 
 namespace DeliCheck.Schemas.Responses
 {
+    /// <summary>
+    /// Модель пользователя или друга 
+    /// </summary>
     public class FriendResponseModel
     {
         /// <summary>
@@ -23,7 +26,7 @@ namespace DeliCheck.Schemas.Responses
         /// Идентификатор записи о друге
         /// </summary>
         [JsonPropertyName("friend_label_id")]
-        public int FriendLabelId { get; set; }
+        public int? FriendLabelId { get; set; }
         /// <summary>
         /// Есть ли аватар
         /// </summary>

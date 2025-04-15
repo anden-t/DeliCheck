@@ -19,6 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DeliCheck.Schemas\DeliCheck.Schemas.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="certificate.pfx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

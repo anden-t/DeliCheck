@@ -5,7 +5,7 @@ namespace DeliCheck.Schemas.Responses
     /// <summary>
     /// Ответ со списком друзей
     /// </summary>
-    public class FriendsListResponse : ResponseBase
+    public class FriendsListResponseModel
     {
         /// <summary>
         /// Список друзей в алфавитном порядке
@@ -19,7 +19,7 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("user_id")]
         public int UserId { get; set; }
         /// <summary>
-        /// Получаем ли список только онлайн друзей
+        /// Получаем ли список только зарегистрированных друзей
         /// </summary>
         [JsonPropertyName("only_online")]
         public bool OnlyOnline { get; set; }

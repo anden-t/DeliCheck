@@ -3,10 +3,15 @@
 namespace DeliCheck.Schemas.Responses
 {
     /// <summary>
-    /// Ответ с информацией о профиле
+    /// Модель профиля пользователя
     /// </summary>
-    public class ProfileResponse : ResponseBase
+    public class ProfileResponseModel
     {
+        /// <summary>
+        /// Идентификатор пользователя
+        /// </summary>
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
         /// <summary>
         /// Имя (отображаемое)
         /// </summary>
@@ -33,12 +38,12 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("self")]
         public bool Self { get; set; }
         /// <summary>
-        /// Эл. почта. Может быть null, если self = false
+        /// Эл. почта.
         /// </summary>
         [JsonPropertyName("email")]
         public string? Email { get; set; }
         /// <summary>
-        /// Номер телефона. Может быть null, если self = false
+        /// Номер телефона.
         /// </summary>
         [JsonPropertyName("phone_number")]
         public string? PhoneNumber { get; set; }

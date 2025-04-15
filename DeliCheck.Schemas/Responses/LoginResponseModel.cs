@@ -1,13 +1,17 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace DeliCheck.Schemas.Responses
 {
     /// <summary>
-    /// Ответ для входа в аккаунт (через логин или регистрацию)
+    /// Модель авторизации
     /// </summary>
-    public class LoginResponse : ResponseBase
+    public class LoginResponseModel
     {
-        public LoginResponse() : base() { }
         /// <summary>
         /// ID пользователя 
         /// </summary>

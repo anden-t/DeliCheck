@@ -32,22 +32,22 @@ namespace DeliCheck.Controllers
         /// <param name="userId">Идентификатор пользователя, информацию о котором необходимо получить</param>
         /// <returns></returns>
         [HttpGet("get")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ProfileResponse), (int)System.Net.HttpStatusCode.OK)]
         public IActionResult GetProfile([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int userId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == userId);
-                if (user == null) return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
                 bool self = user.Id == token.UserId;
 
-                var response = new ProfileResponse()
+                var response = new ProfileResponseModel()
                 {
                     Email = self ? user.Email : string.Empty,
                     Firstname = user.Firstname,
@@ -59,7 +59,7 @@ namespace DeliCheck.Controllers
                     Self = self
                 };
 
-                return Ok(response);
+                return Ok(new ProfileResponse(response));
             }
         }
 
@@ -70,24 +70,24 @@ namespace DeliCheck.Controllers
         /// <param name="file">Аватар в формате JPG или PNG</param>
         /// <returns></returns>
         [HttpPost("set-avatar")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.InternalServerError)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.InternalServerError)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> SetAvatar([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] IFormFile file)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == token.UserId);
-                if (user == null) return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
                 if (file.ContentType != "image/jpeg" || file.ContentType != "image/jpg" || file.ContentType != "image/png")
-                    return BadRequest(ResponseBase.Failure("Принимаются файлы только типа image/jpeg, image/jpg или image/png"));
+                    return BadRequest(ApiResponse.Failure("Принимаются файлы только типа image/jpeg, image/jpg или image/png"));
                 if (file.Length > 10 * 1024 * 1024)
-                    return BadRequest(ResponseBase.Failure("Принимаются файлы размером не более 10 МБ"));
+                    return BadRequest(ApiResponse.Failure("Принимаются файлы размером не более 10 МБ"));
 
                 using (var stream = file.OpenReadStream())
                 {
@@ -95,9 +95,9 @@ namespace DeliCheck.Controllers
                     {
                         user.HasAvatar = true;
                         await db.SaveChangesAsync();
-                        return Ok(ResponseBase.Success());
+                        return Ok(ApiResponse.Success());
                     }
-                    else return StatusCode(500, ResponseBase.Failure("Не удалось сохранить аватар."));
+                    else return StatusCode(500, ApiResponse.Failure("Не удалось сохранить аватар."));
                 }
             }
         }
@@ -108,26 +108,26 @@ namespace DeliCheck.Controllers
         /// <param name="sessionToken">Токен сессии</param>
         /// <returns></returns>
         [HttpGet("remove-avatar")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.InternalServerError)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.InternalServerError)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> RemoveAvatar([FromHeader(Name = "x-session-token")][Required] string sessionToken)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == token.UserId);
-                if (user == null) return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
                 if (_avatarService.RemoveUserAvatar(user.Id))
                 {
                     user.HasAvatar = false;
                     await db.SaveChangesAsync();
                 }
-                return Ok(ResponseBase.Success());
+                return Ok(ApiResponse.Success());
             }
         }
         
@@ -139,18 +139,18 @@ namespace DeliCheck.Controllers
         /// <param name="request">Тело запроса</param>
         /// <returns></returns>
         [HttpGet("edit")]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.Unauthorized)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.BadRequest)]
-        [ProducesResponseType(typeof(ResponseBase), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> ProfileEditAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [FromBody][Required] ProfileEditRequest request)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ResponseBase.Failure(Constants.Unauthorized));
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
             
             using (var db = new DatabaseContext())
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == token.Id);
-                if (user == null) return BadRequest(ResponseBase.Failure(Constants.UserNotFound));
+                if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
                 request.Username = request.Username?.Trim();
                 request.Firstname = request.Firstname?.Trim();
@@ -159,15 +159,15 @@ namespace DeliCheck.Controllers
                 request.PhoneNumber = request.PhoneNumber?.Trim();
 
                 if (!string.IsNullOrWhiteSpace(request.Firstname) && request.Firstname.Length > 20)
-                    return BadRequest(ResponseBase.Failure("Неправильно введено \"Имя\""));
+                    return BadRequest(ApiResponse.Failure("Неправильно введено \"Имя\""));
                 if (!string.IsNullOrWhiteSpace(request.Lastname) && request.Lastname.Length > 20)
-                    return BadRequest(ResponseBase.Failure("Неправильно введено \"Фамилия\""));
+                    return BadRequest(ApiResponse.Failure("Неправильно введено \"Фамилия\""));
                 if (!string.IsNullOrWhiteSpace(request.Username) && request.Username.Length < 4 || request.Username.Length > 20)
-                    return BadRequest(ResponseBase.Failure("Неправильно введено \"Юзернейм\". Должен быть длиной от 4 до 20 символов"));
+                    return BadRequest(ApiResponse.Failure("Неправильно введено \"Юзернейм\". Должен быть длиной от 4 до 20 символов"));
                 if (!string.IsNullOrWhiteSpace(request.Email) && !Regex.IsMatch(request.Email, @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"))
-                    return BadRequest(ResponseBase.Failure("Неправильно введено \"Электронная почта\""));
+                    return BadRequest(ApiResponse.Failure("Неправильно введено \"Электронная почта\""));
                 if (!string.IsNullOrWhiteSpace(request.PhoneNumber) && (request.PhoneNumber.Length < 7 || request.PhoneNumber.Substring(1).Any(x => !char.IsDigit(x))))
-                    return BadRequest(ResponseBase.Failure("Неправильно введено \"Номер телефона\""));
+                    return BadRequest(ApiResponse.Failure("Неправильно введено \"Номер телефона\""));
 
                 if(!string.IsNullOrEmpty(request.Username))
                     user.Username = request.Username;
@@ -181,10 +181,8 @@ namespace DeliCheck.Controllers
 
                 await db.SaveChangesAsync();
 
-                return Ok(ResponseBase.Success());
+                return Ok(ApiResponse.Success());
             }
         }
-
-        
     }
 }

@@ -1,5 +1,4 @@
-﻿using DeliCheck.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace DeliCheck.Schemas.Requests
