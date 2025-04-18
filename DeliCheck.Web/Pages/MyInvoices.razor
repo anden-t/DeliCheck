@@ -68,7 +68,7 @@
             return;
         }
 
-        _invoices = new List<InvoiceResponseModel>().AsQueryable();//(await _client.GetInvoices()).Invoices.AsQueryable();
+        _invoices = (await _client.GetInvoices()).Invoices.AsQueryable();
         _invoicesCountZero = _invoices.Count() == 0;
 
 
