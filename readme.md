@@ -89,30 +89,30 @@ https://deli-check.ru/
 Необходимые зависимости при работе: [Tesseract](https://github.com/tesseract-ocr/tesseract) (Версия для Windows, выбраны дополнительные языковые модели: Русский, Scripts: Cyrrilic), [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/ru-ru/download/dotnet/8.0) <br/><br/>
 
 Для компиляции необходима MS Visual Studio 2022 или более поздняя с компонентами .NET 8 и ASP.NET Core Web API. Проект DeliCheck.Api.csproj. Если необходимо восстановить пакеты Nuget, которые неоходимы для компиляции, надо кликнуть правой кнопкой мыши кнопкой мыши на решение и выбрать "Восстановить пакеты Nuget". Используемые пакеты:
-    Microsoft.EntityFrameworkCore.Sqlite 9.0.3
-    Microsoft.VisualStudio.Azure.Containers.Tools.Targets 1.19.6
-    SixLabors.ImageSharp 3.1.7
-    Swashbuckle.AspNetCore 6.4.0
-    ZXing.Net 0.16.10
-    Xing.Net.Bindings.ImageSharp.V2 0.16.17
+>Microsoft.EntityFrameworkCore.Sqlite 9.0.3
+>Microsoft.VisualStudio.Azure.Containers.Tools.Targets 1.19.6
+>SixLabors.ImageSharp 3.1.7
+>Swashbuckle.AspNetCore 6.4.0
+>ZXing.Net 0.16.10
+>Xing.Net.Bindings.ImageSharp.V2 0.16.17
 <br/>
 Также необходимо внести изменения в settings.json
-    {
-        "Logging": {
-            "LogLevel": {
-            "Default": "Information",
-            "Microsoft.AspNetCore": "Warning"
-            }
-        },
-        "BindIP": "{IP сервера, на который биндить сервер}",
-        "VkAppId": 53377795, // идентификатор приложения ВК
-        "VkRedirectUri": "https://api.deli-check.ru/auth/vk-callback", // Редирект с VK. Не будет работать без изменения в панели разработчика ВК. Для проверки интеграции с ВК используйте https://deli-check.ru
-        "VkRedirectConnectUri": "https://api.deli-check.ru/auth/vk-connect-callback", // Редирект с VK. Не будет работать без изменения в панели разработчика ВК. Для проверки интеграции с ВК используйте https://deli-check.ru
-        "VkScope": "vkid.personal_info friends",
-        "AllowedHosts": "*",
-        "Domain": "api.deli-check.ru", // доменное имя, которое ассоциировано с IP адресом сервера
-        "TesseractPath": "C:\\Program Files\\Tesseract-OCR\\tesseract" // Путь к рабочей папке Tesseract
-    }
+```{
+    "Logging": {
+        "LogLevel": {
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+        }
+    },
+    "BindIP": "{IP сервера, на который биндить сервер}",
+    "VkAppId": 53377795, // идентификатор приложения ВК
+    "VkRedirectUri": "https://api.deli-check.ru/auth/vk-callback", // Редирект с VK. Не будет работать без изменения в панели разработчика ВК. Для проверки интеграции с ВК используйте https://deli-check.ru
+    "VkRedirectConnectUri": "https://api.deli-check.ru/auth/vk-connect-callback", // Редирект с VK. Не будет работать без изменения в панели разработчика ВК. Для проверки интеграции с ВК используйте https://deli-check.ru
+    "VkScope": "vkid.personal_info friends",
+    "AllowedHosts": "*",
+    "Domain": "api.deli-check.ru", // доменное имя, которое ассоциировано с IP адресом сервера
+    "TesseractPath": "C:\\Program Files\\Tesseract-OCR\\tesseract" // Путь к рабочей папке Tesseract
+}```
 <br/>
 Публикация приложения: необходимо создать профиль публикации "В папке" и выбрать целевую среду выполнения. После этого можно запускать скомпилированное приложение, работает на веб-сервере Kestrel.
 
@@ -121,15 +121,15 @@ https://deli-check.ru/
 Необходимые зависимости при работе: [IIS](https://learn.microsoft.com/ru-ru/iis/get-started/introduction-to-iis/iis-web-server-overview), Blazor Web Assembly, [.NET 9](https://dotnet.microsoft.com/ru-ru/download/dotnet/9.0)<br/>
 <br/>
 Для компиляции необходима MS Visual Studio 2022 или более поздняя с компонентами .NET 9 и Standalone Blazor Web Assembly. Проект DeliCheck.Web.csproj. Если необходимо восстановить пакеты Nuget, которые неоходимы для компиляции, надо кликнуть правой кнопкой мыши кнопкой мыши на решение и выбрать "Восстановить пакеты Nuget". Используемые пакеты:
-    BlazorCurrentDevice 1.0.7
-    Blazored.LocalStorage 4.5.0
-    Blazorise 1.7.5
-    Blazorise.Bootstrap5 1.7.5
-    Blazorise.LottieAnimation 1.7.5
-    Cropper.Blazor 1.4.0
-    Microsoft.AspNetCore.Components.WebAssembly 9.0.4
-    Microsoft.AspNetCore.Components.WebAssembly.DevServer 9.0.4
-    Radzen.Blazor 6.5.3
+>BlazorCurrentDevice 1.0.7
+>Blazored.LocalStorage 4.5.0
+>Blazorise 1.7.5
+>Blazorise.Bootstrap5 1.7.5
+>Blazorise.LottieAnimation 1.7.5
+>Cropper.Blazor 1.4.0
+>Microsoft.AspNetCore.Components.WebAssembly 9.0.4
+>Microsoft.AspNetCore.Components.WebAssembly.DevServer 9.0.4
+>Radzen.Blazor 6.5.3
 
 Необходимо настроить URL для конечных точек API. В файле Program.cs изменить BaseAddress для HttpClient на URL-адрес API сервера.
 <br/>
