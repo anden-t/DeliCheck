@@ -127,8 +127,8 @@
         <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textTotal"></RadzenText>
 
         <RadzenStack Style="rz-mt-3" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-            <RadzenButton class="my-button rz-w-100" Icon="savings" IsBusy=@_discount BusyText="Ура! Скидка..." Text="Скидка" Click="@AddDiscount"></RadzenButton>
-            <RadzenButton class=" my-button rz-w-100" Icon="percent" IsBusy=@_tips BusyText="Добавляем чаевые..." Text="Чаевые" Click="@AddTips"></RadzenButton>
+            <RadzenButton class="my-button rz-w-100" Icon="percent" IsBusy=@_discount BusyText="Ура! Скидка..." Text="Скидка" Click="@AddDiscount"></RadzenButton>
+            <RadzenButton class=" my-button rz-w-100" Icon="savings" IsBusy=@_tips BusyText="Добавляем чаевые..." Text="Чаевые" Click="@AddTips"></RadzenButton>
         </RadzenStack>
 
         <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Разделяем..." Text="Разделить чек" Click="@CreateBills"></RadzenButton>
