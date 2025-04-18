@@ -221,24 +221,6 @@ namespace DeliCheck.Controllers
         }
 
         /// <summary>
-        /// Получить данные для авторизации через ВК
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet("vk-get")]
-        [ProducesResponseType(typeof(VkAuthInfoResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult VkGet()
-        {
-            var codeVerifier = _vkApiService.GetCodeVerifier();
-            var codeChallenge = _vkApiService.GetCodeChallenge(codeVerifier);
-            var state = _vkApiService.GetState();
-
-            if (_codeVerifiers.ContainsKey(state)) _codeVerifiers.Remove(state);
-            _codeVerifiers.Add(state, codeVerifier);
-
-            return Ok(new VkAuthInfoResponse(new VkAuthInfoResponseModel() {   }));
-        }
-
-        /// <summary>
         /// Возвращает ссылку для привязки профиля к ВК
         /// </summary>
         /// <returns>Ссылка для привязки профиля к ВК</returns>

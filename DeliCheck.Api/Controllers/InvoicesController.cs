@@ -453,7 +453,7 @@ namespace DeliCheck.Controllers
         }
 
         /// <summary>
-        /// Получает список чеков, которые загрузил текущий пользователь
+        /// Получает список чеков, в которых пользовтель принимает участие
         /// </summary>
         /// <param name="sessionToken">Токен сессии</param>
         /// <returns></returns>
@@ -467,7 +467,7 @@ namespace DeliCheck.Controllers
 
             using (var db = new DatabaseContext())
             {
-                var list = db.Invoices.Where(x => x.OwnerId == token.UserId).ToList().Select(x => x.ToResponseModel(db)).ToList();
+                var list = db.Invoices.ToList().Where(x => x.OwnerId == token.UserId || (x.BillsCreated && db.Bills.Any(c => !c.OfflineOwner && c.OwnerId == token.UserId))).ToList().Select(x => x.ToResponseModel(db)).ToList();
                 return Ok(new InvoicesListResponse(new InvoicesListResponseModel() { Invoices = list }));
             }
         }
