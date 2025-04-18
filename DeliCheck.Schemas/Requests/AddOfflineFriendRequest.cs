@@ -17,7 +17,6 @@ namespace DeliCheck.Schemas.Requests
         /// <summary>
         /// Фамилия
         /// </summary>
-        [Required]
         [JsonPropertyName("lastname")]
         public string Lastname { get; set; }
     }

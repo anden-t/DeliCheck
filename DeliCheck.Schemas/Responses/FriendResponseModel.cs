@@ -33,6 +33,11 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("has_avatar")]
         public bool HasAvatar { get; set; }
         /// <summary>
+        /// URL-аватара
+        /// </summary>
+        [JsonPropertyName("avatar_url")]
+        public string AvatarUrl { get; set; }
+        /// <summary>
         /// Зарегистрирован ли пользователя
         /// </summary>
         [JsonPropertyName("has_profile")]

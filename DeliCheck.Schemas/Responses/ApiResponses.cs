@@ -93,4 +93,11 @@ namespace DeliCheck.Schemas.Responses
         public InvoicesListResponse() { }
         public InvoicesListResponse(InvoicesListResponseModel response) : base(response) { }
     }
+
+    public class InvoiceItemResponse : ApiResponse<InvoiceItemResponseModel>
+    {
+        public InvoiceItemResponse() { }
+        public InvoiceItemResponse(InvoiceItemResponseModel response) : base(response) { }   
+    }
+
 }

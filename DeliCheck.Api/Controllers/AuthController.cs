@@ -5,8 +5,6 @@ using DeliCheck.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
-using ZXing;
-using ZXing.Aztec.Internal;
 
 namespace DeliCheck.Controllers
 {
@@ -216,6 +214,24 @@ namespace DeliCheck.Controllers
             var codeChallenge = _vkApiService.GetCodeChallenge(codeVerifier);
             var state = _vkApiService.GetState();
             
+            if (_codeVerifiers.ContainsKey(state)) _codeVerifiers.Remove(state);
+            _codeVerifiers.Add(state, codeVerifier);
+
+            return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetVkAuthUrl(codeChallenge, state) }));
+        }
+
+        /// <summary>
+        /// Получить данные для авторизации через ВК
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("vk-get")]
+        [ProducesResponseType(typeof(VkAuthResponse), (int)System.Net.HttpStatusCode.OK)]
+        public IActionResult VkGet()
+        {
+            var codeVerifier = _vkApiService.GetCodeVerifier();
+            var codeChallenge = _vkApiService.GetCodeChallenge(codeVerifier);
+            var state = _vkApiService.GetState();
+
             if (_codeVerifiers.ContainsKey(state)) _codeVerifiers.Remove(state);
             _codeVerifiers.Add(state, codeVerifier);
 

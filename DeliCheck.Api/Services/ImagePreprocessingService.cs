@@ -5,8 +5,11 @@ namespace DeliCheck.Services
 {
     public class ImagePreprocessingService : IImagePreprocessingService
     {
-        private const float _contrastAmount = 1.2f;
-        public async Task<Stream> PreprocessImageAsync(Stream originalImage, int x1, int y1, int x2, int y2)
+        private const float _contrastAmount = 1.1f;
+
+        private static int _imgIndex = 0;
+
+        public async Task<string> PreprocessImageAsync(Stream originalImage, int x1, int y1, int x2, int y2)
         {
             Image image = Image.Load(originalImage);
 
@@ -21,11 +24,18 @@ namespace DeliCheck.Services
             }
 
             image.Mutate(i => i.Crop(new Rectangle() { X = x, Y = y, Width = width, Height = height }).Contrast(_contrastAmount));
-            var ms = new MemoryStream();
-            await image.SaveAsPngAsync(ms);
-            await image.SaveAsPngAsync("1.png");
-            ms.Position = 0;
-            return ms;
+
+            string path = GetPath();
+            await image.SaveAsPngAsync(path);
+            return path;
+        }
+
+        private string GetPath()
+        {
+            Directory.CreateDirectory("InvoicesImages");
+            Interlocked.Increment(ref _imgIndex);
+
+            return Path.GetFullPath($"InvoicesImages/{_imgIndex}.png");
         }
     }
 }

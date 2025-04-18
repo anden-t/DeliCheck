@@ -7,20 +7,25 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DeliCheck.Controllers
 {
+    /// <summary>
+    /// Контроллер для взамодействия со списком друзей
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class FriendsController : ControllerBase
     {
         private readonly IAuthService _authService;
         private readonly IVkApi _vkApi;
+        private readonly IConfiguration _configuration;
 
         /// <summary>
         /// Создает контроллер, представляющий методы для списка друзей
         /// </summary>
-        public FriendsController(IAuthService authService, IVkApi vkApi)
+        public FriendsController(IAuthService authService, IVkApi vkApi, IConfiguration configuration)
         {
             _authService = authService;
             _vkApi = vkApi;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -107,8 +112,11 @@ namespace DeliCheck.Controllers
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
-            request.Firstname = request.Lastname.Trim();
-            request.Lastname = request.Firstname.Trim();
+            request.Firstname ??= string.Empty;
+            request.Lastname ??= string.Empty;
+
+            request.Firstname = request.Firstname.Trim();
+            request.Lastname = request.Lastname.Trim();
 
             if (string.IsNullOrEmpty(request.Firstname) && string.IsNullOrEmpty(request.Lastname))
                 return BadRequest(ApiResponse.Failure("Фамилия и имя не должны быть одновременно пустые"));
@@ -200,7 +208,7 @@ namespace DeliCheck.Controllers
         [HttpGet("search")]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(FriendsListResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult SearchFriends([FromHeader(Name = "x-session-token")][Required] string sessionToken, string query)
+        public IActionResult SearchFriends([FromHeader(Name = "x-session-token")][Required] string sessionToken, string? query)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -246,8 +254,10 @@ namespace DeliCheck.Controllers
         {
             if (query == string.Empty) return GetFriends(db, userId, false);
 
-            var users = db.Users.ToList().Where(x => x.Firstname.StartsWith(query) || x.Lastname.StartsWith(query) || $"{x.Firstname} {x.Lastname}".StartsWith(query)).ToList();
-            var offlineFriends = db.OfflineFriends.ToList().Where(x => x.OwnerId == userId && (x.Firstname.StartsWith(query) || x.Lastname.StartsWith(query) || $"{x.Firstname} {x.Lastname}".StartsWith(query))).ToList();
+            query = query.ToLower();
+            var domain = _configuration["Domain"];
+            var users = db.Users.ToList().Where(x => x.Firstname.ToLower().StartsWith(query) || x.Lastname.ToLower().StartsWith(query) || $"{x.Firstname} {x.Lastname}".ToLower().StartsWith(query)).ToList();
+            var offlineFriends = db.OfflineFriends.ToList().Where(x => x.OwnerId == userId && (x.Firstname.ToLower().StartsWith(query) || x.Lastname.ToLower().StartsWith(query) || $"{x.Firstname} {x.Lastname}".ToLower().StartsWith(query))).ToList();
 
             var list = new List<FriendResponseModel>(users.Count + offlineFriends.Count);
 
@@ -262,11 +272,12 @@ namespace DeliCheck.Controllers
                         Lastname = user.Lastname,
                         FriendLabelId = fUser?.Id,
                         UserId = user.Id,
+                        AvatarUrl = user.HasAvatar ? $"https://{domain}/avatars/user?userId={user.Id}" : $"https://{domain}/avatars/default",
                         HasAvatar = user.HasAvatar,
                         HasProfile = true,
                         HasVk = user.VkId != null,
                         VkId = user.VkId
-                    });
+                    }); ;
                 }
             }
 
@@ -278,6 +289,7 @@ namespace DeliCheck.Controllers
                     Lastname = offlineFriend.Lastname,
                     FriendLabelId = offlineFriend.Id,
                     HasProfile = false,
+                    AvatarUrl = offlineFriend.HasAvatar ? $"https://{domain}/avatars/friend?friendLabelId={offlineFriend.Id}" : $"https://{domain}/avatars/default",
                     HasAvatar = offlineFriend.HasAvatar,
                     HasVk = offlineFriend.VkId != null,
                     VkId = offlineFriend.VkId
@@ -291,6 +303,7 @@ namespace DeliCheck.Controllers
         {
             var onlineFriends = db.Friends.Where(x => x.OwnerId == userId).ToList();
             var offlineFriends = db.OfflineFriends.Where(x => x.OwnerId == userId).ToList();
+            var domain = _configuration["Domain"];
 
             var list = new List<FriendResponseModel>(onlineFriends.Count + offlineFriends.Count);
 
@@ -306,10 +319,11 @@ namespace DeliCheck.Controllers
                         FriendLabelId = onlineFriend.Id,
                         UserId = fUser.Id,
                         HasAvatar = fUser.HasAvatar,
+                        AvatarUrl = fUser.HasAvatar ? $"https://{domain}/avatars/user?userId={fUser.Id}" : $"https://{domain}/avatars/default",
                         HasProfile = true,
                         HasVk = fUser.VkId != null,
                         VkId = fUser.VkId
-                    });
+                    }) ;
                 }
             }
 
@@ -325,6 +339,7 @@ namespace DeliCheck.Controllers
                         HasProfile = false,
                         HasAvatar = offlineFriend.HasAvatar,
                         HasVk = offlineFriend.VkId != null,
+                        AvatarUrl = offlineFriend.HasAvatar ? $"https://{domain}/avatars/friend?friendLabelId={offlineFriend.Id}" : $"https://{domain}/avatars/default",
                         VkId = offlineFriend.VkId
                     });
                 }

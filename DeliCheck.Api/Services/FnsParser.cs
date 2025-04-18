@@ -28,7 +28,7 @@ namespace DeliCheck.Services
                 var b = Regex.Match(text, @"var a='(\w\w\w\w\w)';").Groups[1].Value;
                 text = await (await httpClient.GetAsync($"https://proverkacheka.com/geng/_autobuild/version.min.js?v={configVer.Groups[1].Value}")).Content.ReadAsStringAsync();
                 var a = Regex.Match(text, @"App\.cfg\.crypto='(\w\w\w\w\w)'").Groups[1].Value;
-                _key = a + b;
+                _key = a + b;   
             }
         }
 
@@ -42,10 +42,17 @@ namespace DeliCheck.Services
                 httpClient.DefaultRequestHeaders.Add("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
                 httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "identity");
 
-                var body = new StringContent($"{{ \"qrraw\": \"{qr}\", \"qr\": 3, \"token\": \"0.34\" }}", Encoding.UTF8, "application/json");
+                int d;
+                string b = qr + "3";
+                for (d = 0; d < 1000; d++)
+                {
+                    var i = CreateMD5(b + d);
+                    if (i.Split('0', StringSplitOptions.None).Length - 1 > 4) break;
+                }
+
+                var body = new StringContent($"{{ \"qrraw\": \"{qr}\", \"qr\": 3, \"token\": \"0.{d}\" }}", Encoding.UTF8, "application/json");
                 var response = await httpClient.PostAsync("https://proverkacheka.com/api/v1/check/get", body);
                 var responseBody = await response.Content.ReadAsByteArrayAsync();
-
                 byte[] tKey = SHA256.HashData(Encoding.UTF8.GetBytes(_key)).ToArray();
 
                 byte[] iv = responseBody.Skip(responseBody.Length - 12).ToArray();
@@ -70,7 +77,6 @@ namespace DeliCheck.Services
 
                 var items = new List<InvoiceItemModel>();
 
-                int i = 0;
                 foreach (var item in json["data"]["json"]["items"].AsArray())
                 {
                     items.Add(new InvoiceItemModel() 
@@ -82,6 +88,18 @@ namespace DeliCheck.Services
                 }
 
                 return (result, items);
+            }
+        }
+
+        public static string CreateMD5(string input)
+        {
+            // Use input string to calculate MD5 hash
+            using (MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                return Convert.ToHexString(hashBytes).ToLower(); // .NET 5 +
             }
         }
     }

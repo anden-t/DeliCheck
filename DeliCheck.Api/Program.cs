@@ -15,9 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHostedService<StartService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
 builder.Services.AddSingleton<IAuthProvider, AuthProvider>();
-builder.Services.AddSingleton<IOcrService, AsposeOcrService>();
+builder.Services.AddSingleton<IOcrService, TesseractOcrService>();
 builder.Services.AddSingleton<IImagePreprocessingService, ImagePreprocessingService>();
-builder.Services.AddSingleton<IParsingService, AsposeParsingService>();
+builder.Services.AddSingleton<IParsingService, TesseractParsingService>();
 builder.Services.AddSingleton<IAvatarService, AvatarService>();
 builder.Services.AddSingleton<IVkApi, VkApi>();
 builder.Services.AddSingleton<IFnsParser, FnsParser>();
@@ -59,8 +59,9 @@ var app = builder.Build();
 //}
 app.UseCors(builder => builder
          .SetIsOriginAllowed(callerHost
-                => callerHost.Contains("http://localhost:5208") || 
-                    callerHost.Contains("https://deli-check.ru")
+                => true//callerHost.Contains("http://localhost:5208") || 
+                //callerHost.Contains("http://192.168.1.128:8888") || 
+                  //  callerHost.Contains("https://deli-check.ru")
                 )
          .AllowAnyMethod()
          .AllowAnyHeader()

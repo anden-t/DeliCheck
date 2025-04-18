@@ -2,6 +2,9 @@
 
 namespace DeliCheck.Schemas.Responses
 {
+    /// <summary>
+    /// Информация о позиции чека
+    /// </summary>
     public class InvoiceItemResponseModel
     {
         /// <summary>

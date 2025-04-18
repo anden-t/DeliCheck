@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace DeliCheck.Services
 {
-    public class AsposeParsingService : IParsingService
+    public class TesseractParsingService : IParsingService
     {
         public (InvoiceModel, List<InvoiceItemModel>) GetInvoiceModelFromText(string text)
         {

@@ -24,6 +24,18 @@ namespace DeliCheck.Controllers
         }
 
         /// <summary>
+        /// Получает дефолтный аватар
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("default")]
+        [ProducesResponseType(typeof(FileResult), (int)System.Net.HttpStatusCode.OK)]
+        public FileResult GetDefaultAvatar()
+        {
+            var fs = _avatarService.GetDefaultAvatar();
+            return File(fs, "image/jpeg");
+        }
+
+        /// <summary>
         /// Получает аватар зарегистрированного пользователя. Формат: JPG, 200x200
         /// </summary>
         /// <param name="userId">Идентификатор пользователя</param>
@@ -35,7 +47,6 @@ namespace DeliCheck.Controllers
             var fs =_avatarService.GetUserAvatar(userId);
             if(fs == null)
                 fs = _avatarService.GetDefaultAvatar();
-
             return File(fs, "image/jpeg");
         }
 

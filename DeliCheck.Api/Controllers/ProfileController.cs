@@ -7,11 +7,11 @@ using System.Text.RegularExpressions;
 
 namespace DeliCheck.Controllers
 {
-    [ApiController]
-    [Route("[controller]")]
     /// <summary>
     /// Контроллер, представляющий методы для профилей
     /// </summary>
+    [ApiController]
+    [Route("[controller]")]
     public class ProfileController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -35,10 +35,12 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ProfileResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult GetProfile([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int userId)
+        public IActionResult GetProfile([FromHeader(Name = "x-session-token")][Required] string sessionToken, int? userId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
+
+            userId ??= token.UserId;
 
             using (var db = new DatabaseContext())
             {
@@ -56,7 +58,8 @@ namespace DeliCheck.Controllers
                     Username = user.Username,
                     HasAvatar = user.HasAvatar,
                     VkId = user.VkId,
-                    Self = self
+                    Self = self,
+                    Id = user.Id
                 };
 
                 return Ok(new ProfileResponse(response));
@@ -90,6 +93,39 @@ namespace DeliCheck.Controllers
                     return BadRequest(ApiResponse.Failure("Принимаются файлы размером не более 10 МБ"));
 
                 using (var stream = file.OpenReadStream())
+                {
+                    if (await _avatarService.SaveUserAvatarAsync(stream, user.Id))
+                    {
+                        user.HasAvatar = true;
+                        await db.SaveChangesAsync();
+                        return Ok(ApiResponse.Success());
+                    }
+                    else return StatusCode(500, ApiResponse.Failure("Не удалось сохранить аватар."));
+                }
+            }
+        }
+        /// <summary>
+        /// Устанавливает аватар для пользователя (файл в Json в Base64)
+        /// </summary>
+        /// <param name="sessionToken">Токен сессии</param>
+        /// <param name="file">Тело запроса</param>
+        /// <returns></returns>
+        [HttpPost("set-avatar-json")]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.InternalServerError)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
+        public async Task<IActionResult> SetAvatar([FromHeader(Name = "x-session-token")][Required] string sessionToken, [FromBody][Required] SetAvatarRequest file)
+        {
+            var token = _authService.GetSessionTokenByString(sessionToken);
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
+
+            using (var db = new DatabaseContext())
+            {
+                var user = db.Users.FirstOrDefault(x => x.Id == token.UserId);
+                if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
+
+                using (var stream = new MemoryStream(Convert.FromBase64String(file.AvatarBase64)))
                 {
                     if (await _avatarService.SaveUserAvatarAsync(stream, user.Id))
                     {
@@ -138,7 +174,7 @@ namespace DeliCheck.Controllers
         /// <param name="sessionToken">Токен сессии</param>
         /// <param name="request">Тело запроса</param>
         /// <returns></returns>
-        [HttpGet("edit")]
+        [HttpPost("edit")]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
@@ -149,7 +185,7 @@ namespace DeliCheck.Controllers
             
             using (var db = new DatabaseContext())
             {
-                var user = db.Users.FirstOrDefault(x => x.Id == token.Id);
+                var user = db.Users.FirstOrDefault(x => x.Id == token.UserId);
                 if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
                 request.Username = request.Username?.Trim();
@@ -175,7 +211,7 @@ namespace DeliCheck.Controllers
                     user.Firstname = request.Firstname;
                 if(!string.IsNullOrEmpty(request.Lastname))
                     user.Lastname = request.Lastname;
-                
+
                 user.Email = request.Email ?? string.Empty;
                 user.PhoneNumber = request.PhoneNumber ?? string.Empty;
 

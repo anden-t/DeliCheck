@@ -26,6 +26,6 @@ namespace DeliCheck.Models
         /// <summary>
         /// Идентификатор чека
         /// </summary>
-        public long InvoiceId { get; set; }
+        public int InvoiceId { get; set; }
     }
 }

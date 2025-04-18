@@ -10,6 +10,6 @@
         /// </summary>
         /// <param name="image">Изображение</param>
         /// <returns>Текст с изображения</returns>
-        Task<string?> GetTextFromImageAsync(Stream image);
+        Task<string?> GetTextFromImageAsync(string imagePath);
     }
 }

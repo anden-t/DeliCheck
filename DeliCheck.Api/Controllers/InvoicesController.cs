@@ -8,6 +8,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DeliCheck.Controllers
 {
+    /// <summary>
+    /// Контроллер чеков и счетов
+    /// </summary>
     [ApiController]
     [Route("[controller]")]
     public class InvoicesController : ControllerBase
@@ -60,11 +63,9 @@ namespace DeliCheck.Controllers
             try
             {
                 using var fs = file.OpenReadStream();
-                using var preprocessed = await _preprocessingService.PreprocessImageAsync(fs, x1, y1, x2, y2);
-
                 try
                 {
-                    var qr = await _qrCodeReader.ReadQrCodeAsync(preprocessed);
+                    var qr = await _qrCodeReader.ReadQrCodeAsync(fs);
                     if (qr != null)
                     {
                         await _fnsParser.UpdateKeyAsync();
@@ -77,14 +78,20 @@ namespace DeliCheck.Controllers
                     _logger.LogWarning($"Ошибка при распознавании QR-кода или получении данных с ФНС: {ex.GetType().Name} {ex.Message} {ex.StackTrace} {ex.InnerException?.GetType()?.Name ?? ""} {ex.InnerException?.Message ?? ""}");
                 }
 
+
                 if (!parsed)
                 {
-                    preprocessed.Position = 0;
-                    var text = await _ocrService.GetTextFromImageAsync(preprocessed);
+                    fs.Position = 0;
+                    var preprocessedPath = await _preprocessingService.PreprocessImageAsync(fs, x1, y1, x2, y2);
+                    var text = await _ocrService.GetTextFromImageAsync(preprocessedPath);
+
                     if (string.IsNullOrWhiteSpace(text))
                         return BadRequest(ApiResponse.Failure("Не удалось распознать чек. Попробуйте сфотографировать еще раз!"));
 
                     (invoice, items) = _parsingService.GetInvoiceModelFromText(text);
+
+                    if (invoice.TotalCost == 0 && items.Count == 0)
+                        return BadRequest(ApiResponse.Failure("Не удалось распознать чек. Попробуйте сфотографировать еще раз!"));
                 }
 
                 if(invoice != null && items != null)
@@ -120,14 +127,10 @@ namespace DeliCheck.Controllers
         /// <param name="invoiceId">Идентификатор чека</param>
         /// <returns></returns>
         [HttpGet("get")]
-        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(InvoiceResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult GetInvoice([FromHeader(Name = "x-session-token")][Required] string sessionToken, int invoiceId)
+        public IActionResult GetInvoice(int invoiceId)
         {
-            var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
-
             using (var db = new DatabaseContext())
             {
                 var invoice = db.Invoices.FirstOrDefault(x => x.Id == invoiceId);
@@ -184,19 +187,20 @@ namespace DeliCheck.Controllers
         /// </summary>
         /// <param name="sessionToken">Токен сессии</param>
         /// <param name="invoiceId">Идентификатор чека</param>
+        /// <param name="deleteBills">Удалить счета чека</param>
         /// <returns></returns>
         [HttpGet("remove")]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
-        public async Task<IActionResult> RemoveInvoiceAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, int invoiceId)
+        public async Task<IActionResult> RemoveInvoiceAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, int invoiceId, bool deleteBills)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 
             using (var db = new DatabaseContext())
             {
-                var invoice = db.Invoices.FirstOrDefault(x => x.Id == invoiceId);
+                var invoice = db.Invoices.FirstOrDefault(x => x.Id == invoiceId && x.OwnerId == token.UserId);
                 if (invoice == null)
                     return BadRequest(ApiResponse.Failure("Не удалось найти чек с таким ID"));
 
@@ -204,6 +208,17 @@ namespace DeliCheck.Controllers
 
                 foreach (var item in db.InvoicesItems.Where(x => x.InvoiceId == invoice.Id))
                     db.InvoicesItems.Remove(item);
+
+                if (invoice.BillsCreated && deleteBills)
+                {
+                    foreach (var item in db.Bills.Where(x => x.InvoiceId == invoice.Id))
+                    {
+                        foreach (var billItem in db.BillsItems.Where(x => x.BillId == item.Id))
+                            db.BillsItems.Remove(billItem);
+
+                        db.Bills.Remove(item);
+                    }
+                }
 
                 await db.SaveChangesAsync();
                 return Ok(ApiResponse.Success());
@@ -259,6 +274,102 @@ namespace DeliCheck.Controllers
                 bill.Payed = true;
                 await db.SaveChangesAsync();
                 return Ok(ApiResponse.Success());
+            }
+        }
+
+        /// <summary>
+        /// Удалить позицию из чека
+        /// </summary>
+        /// <param name="sessionToken">Токен сессии</param>
+        /// <param name="invoiceItemId">Индентификатор позиции в чеке</param>
+        /// <returns></returns>
+        [HttpGet("remove-invoice-item")]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
+        public async Task<IActionResult> RemoveInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, int invoiceItemId)
+        {
+            var token = _authService.GetSessionTokenByString(sessionToken);
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
+
+            using (var db = new DatabaseContext())
+            {
+                var item = db.InvoicesItems.FirstOrDefault(x => x.Id == invoiceItemId);
+                if (item == null) return BadRequest(ApiResponse.Failure("Не удалось найти позицию с данным ID"));
+
+                var invoice = db.Invoices.FirstOrDefault(x => x.Id == item.InvoiceId && x.OwnerId == token.UserId);
+                if (invoice == null) return StatusCode(403, ApiResponse.Failure("Вы не являетесь владельцем чека"));
+
+                db.InvoicesItems.Remove(item);
+                await db.SaveChangesAsync();
+
+                return Ok(ApiResponse.Success());
+            }
+        }
+
+        /// <summary>
+        /// Изменяет позицию чека
+        /// </summary>
+        /// <param name="sessionToken">Токен сессии</param>
+        /// <param name="request">Тело запросае</param>
+        /// <returns></returns>
+        [HttpPost("edit-invoice-item")]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
+        public async Task<IActionResult> EditInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, EditInvoiceItemRequest request)
+        {
+            var token = _authService.GetSessionTokenByString(sessionToken);
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
+
+            using (var db = new DatabaseContext())
+            {
+                var item = db.InvoicesItems.FirstOrDefault(x => x.Id == request.Id);
+                if (item == null) return BadRequest(ApiResponse.Failure("Не удалось найти позицию с данным ID"));
+
+                var invoice = db.Invoices.FirstOrDefault(x => x.Id == item.InvoiceId && x.OwnerId == token.UserId);
+                if (invoice == null) return StatusCode(403, ApiResponse.Failure("Вы не являетесь владельцем чека или чек не найден"));
+
+                item.Cost = request.Cost;
+                item.Count = request.Count;
+                item.Name = request.Name;
+                await db.SaveChangesAsync();
+
+                return Ok(ApiResponse.Success());
+            }
+        }
+        
+        /// <summary>
+        /// Добавляет позицию в чек
+        /// </summary>
+        /// <param name="sessionToken">Токен сессии</param>
+        /// <param name="request">Тело запроса</param>
+        /// <returns></returns>
+        [HttpPost("add-invoice-item")]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(InvoiceItemResponseModel), (int)System.Net.HttpStatusCode.OK)]
+        public async Task<IActionResult> AddInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, AddInvoiceItemRequest request)
+        {
+            var token = _authService.GetSessionTokenByString(sessionToken);
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
+
+            using (var db = new DatabaseContext())
+            {
+                var invoice = db.Invoices.FirstOrDefault(x => x.Id == request.InvoiceId && x.OwnerId == token.UserId);
+                if (invoice == null) return StatusCode(403, ApiResponse.Failure("Вы не являетесь владельцем чека или чек не найден"));
+
+                var item = new InvoiceItemModel()
+                {
+                    Cost = request.Cost,
+                    Count = request.Count,
+                    InvoiceId = request.InvoiceId,
+                    Name = request.Name
+                };
+
+                db.InvoicesItems.Add(item);
+                await db.SaveChangesAsync();
+                return Ok(new InvoiceItemResponse(new InvoiceItemResponseModel() { Name = item.Name, Id = item.Id, Cost = item.Cost, Count = item.Count }));
             }
         }
 
