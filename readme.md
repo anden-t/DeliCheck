@@ -97,7 +97,7 @@ https://deli-check.ru/
 >Xing.Net.Bindings.ImageSharp.V2 0.16.17
 <br/>
 Также необходимо внести изменения в settings.json
-```{
+`{
     "Logging": {
         "LogLevel": {
         "Default": "Information",
@@ -112,7 +112,7 @@ https://deli-check.ru/
     "AllowedHosts": "*",
     "Domain": "api.deli-check.ru", // доменное имя, которое ассоциировано с IP адресом сервера
     "TesseractPath": "C:\\Program Files\\Tesseract-OCR\\tesseract" // Путь к рабочей папке Tesseract
-}```
+}`
 <br/>
 Публикация приложения: необходимо создать профиль публикации "В папке" и выбрать целевую среду выполнения. После этого можно запускать скомпилированное приложение, работает на веб-сервере Kestrel.
 
