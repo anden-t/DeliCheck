@@ -10,6 +10,10 @@ namespace DeliCheck.Services
     {
         private string _key = "38s91f65nm";
 
+        /// <summary>
+        /// Получение ключа шифрования
+        /// </summary>
+        /// <returns></returns>
         public async Task UpdateKeyAsync()
         {
             using (var httpClient = new HttpClient())
@@ -42,6 +46,7 @@ namespace DeliCheck.Services
                 httpClient.DefaultRequestHeaders.Add("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3");
                 httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "identity");
 
+                // Формирование token. Реверс-инжениринг https://proverkacheka.com/scripts/all/js/front.all.min.js
                 int d;
                 string b = qr + "3";
                 for (d = 0; d < 1000; d++)
@@ -52,9 +57,11 @@ namespace DeliCheck.Services
 
                 var body = new StringContent($"{{ \"qrraw\": \"{qr}\", \"qr\": 3, \"token\": \"0.{d}\" }}", Encoding.UTF8, "application/json");
                 var response = await httpClient.PostAsync("https://proverkacheka.com/api/v1/check/get", body);
+                // Зашифрованные данные алгоритмом AES-GCM
                 var responseBody = await response.Content.ReadAsByteArrayAsync();
-                byte[] tKey = SHA256.HashData(Encoding.UTF8.GetBytes(_key)).ToArray();
 
+                // Дешифрование данных Реверс-инжениринг https://proverkacheka.com/scripts/common/lib/crypto.js
+                byte[] tKey = SHA256.HashData(Encoding.UTF8.GetBytes(_key)).ToArray();
                 byte[] iv = responseBody.Skip(responseBody.Length - 12).ToArray();
                 byte[] tag = responseBody.Skip(responseBody.Length - 28).Take(16).ToArray();
                 byte[] content = responseBody.Take(responseBody.Length - 28).ToArray();

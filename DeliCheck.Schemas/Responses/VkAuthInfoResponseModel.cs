@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DeliCheck.Schemas.Responses
+﻿namespace DeliCheck.Schemas.Responses
 {
-    internal class VkAuthInfoResponseModel
+    public class VkAuthInfoResponseModel
     {
         public int AppId { get; set; }
         public string Scope { get; set; }

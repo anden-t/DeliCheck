@@ -225,7 +225,7 @@ namespace DeliCheck.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet("vk-get")]
-        [ProducesResponseType(typeof(VkAuthResponse), (int)System.Net.HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(VkAuthInfoResponse), (int)System.Net.HttpStatusCode.OK)]
         public IActionResult VkGet()
         {
             var codeVerifier = _vkApiService.GetCodeVerifier();
@@ -235,7 +235,7 @@ namespace DeliCheck.Controllers
             if (_codeVerifiers.ContainsKey(state)) _codeVerifiers.Remove(state);
             _codeVerifiers.Add(state, codeVerifier);
 
-            return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetVkAuthUrl(codeChallenge, state) }));
+            return Ok(new VkAuthInfoResponse(new VkAuthInfoResponseModel() {   }));
         }
 
         /// <summary>

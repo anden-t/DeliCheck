@@ -11,7 +11,7 @@ namespace DeliCheck.Utils
         /// <param name="model">Модель</param>
         /// <param name="db">База данных</param>
         /// <returns></returns>
-        public static BillResponseModel ToResponseModel(this BillModel model, DatabaseContext db)
+        public static BillResponseModel ToResponseModel(this BillModel model, DatabaseContext db, IConfiguration configuration)
         {
             string ownerFirstname, ownerLastname, invoiceOwnerFirstname, invoiceOwnerLastname;
 
@@ -49,7 +49,9 @@ namespace DeliCheck.Utils
                 OwnerFirstname = ownerFirstname,
                 OwnerLastname = ownerLastname,
                 InvoiceOwnerFirstname = invoiceOwnerFirstname,
-                InvoiceOwnerLastname = invoiceOwnerLastname
+                InvoiceOwnerLastname = invoiceOwnerLastname,
+                OwnerAvatarUrl = model.OfflineOwner ? $"https://{configuration["Domain"]}/avatars/friend?friendLabelId={model.OwnerId}" : $"https://{configuration["Domain"]}/avatars/user?userId={model.OwnerId}",
+                InvoiceOwnerAvatarUrl = invoice != null ? $"https://{configuration["Domain"]}/avatars/user?userId={invoice.OwnerId}" : $"https://{configuration["Domain"]}/avatars/default"
             };
         }
         /// <summary>

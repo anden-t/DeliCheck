@@ -63,5 +63,11 @@ namespace DeliCheck.Schemas.Responses
         /// </summary>
         [JsonPropertyName("invoice_owner_lastname")]
         public string InvoiceOwnerLastname { get; set; }
+
+        [JsonPropertyName("owner_avatar_url")]
+        public string OwnerAvatarUrl { get; set; }
+
+        [JsonPropertyName("invoice_owner_avatar_url")]
+        public string InvoiceOwnerAvatarUrl { get; set; }
     }
 }

@@ -100,4 +100,9 @@ namespace DeliCheck.Schemas.Responses
         public InvoiceItemResponse(InvoiceItemResponseModel response) : base(response) { }   
     }
 
+    public class VkAuthInfoResponse : ApiResponse<VkAuthInfoResponseModel>
+    {
+        public VkAuthInfoResponse() { }
+        public VkAuthInfoResponse(VkAuthInfoResponseModel response) : base(response) { }
+    }
 }

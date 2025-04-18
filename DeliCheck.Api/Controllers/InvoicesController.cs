@@ -22,8 +22,9 @@ namespace DeliCheck.Controllers
         private readonly IFnsParser _fnsParser;
         private readonly ILogger _logger;
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public InvoicesController(IImagePreprocessingService preprocessingService, IOcrService ocrService, IParsingService parsingService, IQrCodeReader qrCodeReader, IFnsParser fnsParser, IAuthService authService, ILogger<InvoicesController> logger)
+        public InvoicesController(IImagePreprocessingService preprocessingService, IOcrService ocrService, IParsingService parsingService, IQrCodeReader qrCodeReader, IFnsParser fnsParser, IAuthService authService, IConfiguration configuration, ILogger<InvoicesController> logger)
         {
             _authService = authService;
             _preprocessingService = preprocessingService;
@@ -32,6 +33,7 @@ namespace DeliCheck.Controllers
             _qrCodeReader = qrCodeReader;
             _fnsParser = fnsParser;
             _logger = logger;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -129,7 +131,7 @@ namespace DeliCheck.Controllers
         [HttpGet("get")]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(InvoiceResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult GetInvoice(int invoiceId)
+        public IActionResult GetInvoice([Required] int invoiceId)
         {
             using (var db = new DatabaseContext())
             {
@@ -234,14 +236,11 @@ namespace DeliCheck.Controllers
         [HttpGet("get-bills")]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(BillsListResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult GetBillsForInvoice([FromHeader(Name = "x-session-token")][Required] string sessionToken, int invoiceId)
+        public IActionResult GetBillsForInvoice([Required] int invoiceId)
         {
-            var token = _authService.GetSessionTokenByString(sessionToken);
-            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
-
             using (var db = new DatabaseContext())
             {
-                var bills = db.Bills.Where(x => x.InvoiceId == invoiceId).ToList().Select(x => x.ToResponseModel(db)).Where(x => x != null).ToList();
+                var bills = db.Bills.Where(x => x.InvoiceId == invoiceId).ToList().Select(x => x.ToResponseModel(db, _configuration)).Where(x => x != null).ToList();
                 return Ok(new BillsListResponse(bills));
             }
         }
@@ -256,7 +255,7 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Forbidden)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
-        public async Task<IActionResult> PayBillAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, int billId)
+        public async Task<IActionResult> PayBillAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int billId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -287,7 +286,7 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
-        public async Task<IActionResult> RemoveInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, int invoiceItemId)
+        public async Task<IActionResult> RemoveInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] int invoiceItemId)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -317,7 +316,7 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
-        public async Task<IActionResult> EditInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, EditInvoiceItemRequest request)
+        public async Task<IActionResult> EditInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] EditInvoiceItemRequest request)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -349,7 +348,7 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(InvoiceItemResponseModel), (int)System.Net.HttpStatusCode.OK)]
-        public async Task<IActionResult> AddInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, AddInvoiceItemRequest request)
+        public async Task<IActionResult> AddInvoiceItemAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] AddInvoiceItemRequest request)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -383,7 +382,7 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
-        public async Task<IActionResult> CreateBillsForInvoiceAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, CreateBillsRequest request)
+        public async Task<IActionResult> CreateBillsForInvoiceAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, [Required] CreateBillsRequest request)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -448,7 +447,7 @@ namespace DeliCheck.Controllers
             {
                 var user = db.Users.FirstOrDefault(x => x.Id == token.Id);
                 if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
-                var list = db.Bills.Where(x => !x.OfflineOwner && x.OwnerId == token.UserId).ToList().Select(x => x.ToResponseModel(db)).ToList();
+                var list = db.Bills.Where(x => !x.OfflineOwner && x.OwnerId == token.UserId).ToList().Select(x => x.ToResponseModel(db, _configuration)).ToList();
                 return Ok(new BillsListResponse(list));
             }
         }
