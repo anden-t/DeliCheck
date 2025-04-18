@@ -101,6 +101,7 @@ namespace DeliCheck.Controllers
                     using (var db = new DatabaseContext())
                     {
                         invoice.OwnerId = token.UserId;
+                        invoice.CreatedTime = DateTime.UtcNow;
                         db.Invoices.Add(invoice);
                         await db.SaveChangesAsync();
 
@@ -475,7 +476,7 @@ namespace DeliCheck.Controllers
 
             using (var db = new DatabaseContext())
             {
-                var list = db.Invoices.ToList().Where(x => x.OwnerId == token.UserId || (x.BillsCreated && db.Bills.Any(c => !c.OfflineOwner && c.OwnerId == token.UserId))).ToList().Select(x => x.ToResponseModel(db)).ToList();
+                var list = db.Invoices.ToList().Where(x => x.OwnerId == token.UserId || (x.BillsCreated && db.Bills.Any(c => c.InvoiceId == x.Id && !c.OfflineOwner && c.OwnerId == token.UserId))).ToList().Select(x => x.ToResponseModel(db)).ToList(); 
                 return Ok(new InvoicesListResponse(new InvoicesListResponseModel() { Invoices = list }));
             }
         }
