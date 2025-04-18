@@ -52,5 +52,7 @@ namespace DeliCheck.Schemas.Responses
         /// </summary>
         [JsonPropertyName("vk_id")]
         public long? VkId { get; set; }
+
+        public string AvatarUrl => $"https://api.deli-check.ru/avatars/user?userId={Id}";
     }
 }
