@@ -5,7 +5,9 @@ VisualStudioVersion = 17.9.34607.119
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliCheck.Api", "DeliCheck.Api\DeliCheck.Api.csproj", "{E1AB1933-5194-4285-887F-C88766F274A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliCheck.Schemas", "DeliCheck.Schemas\DeliCheck.Schemas.csproj", "{0CD341AD-F24A-486C-A27A-05B604A02A26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliCheck.Schemas", "DeliCheck.Schemas\DeliCheck.Schemas.csproj", "{0CD341AD-F24A-486C-A27A-05B604A02A26}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeliCheck.Web", "DeliCheck.Web\DeliCheck.Web.csproj", "{53EACFF0-C1D1-4397-8D3F-63D5B22B5831}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{0CD341AD-F24A-486C-A27A-05B604A02A26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0CD341AD-F24A-486C-A27A-05B604A02A26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0CD341AD-F24A-486C-A27A-05B604A02A26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53EACFF0-C1D1-4397-8D3F-63D5B22B5831}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53EACFF0-C1D1-4397-8D3F-63D5B22B5831}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53EACFF0-C1D1-4397-8D3F-63D5B22B5831}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53EACFF0-C1D1-4397-8D3F-63D5B22B5831}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

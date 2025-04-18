@@ -8,6 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\icon-192.png" />
+    <Content Remove="wwwroot\icon-512.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Append.Blazor.WebShare" Version="7.0.0" />
     <PackageReference Include="BlazorCurrentDevice" Version="1.0.7" />
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
@@ -31,6 +36,11 @@
   <ItemGroup>
     <Folder Include="Properties\PublishProfiles\" />
     <Folder Include="wwwroot\images\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\icon-192.png" />
+    <None Include="wwwroot\icon-512.png" />
   </ItemGroup>
 
 </Project>
