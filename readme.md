@@ -128,7 +128,7 @@ https://deli-check.ru/
         "VkScope": "vkid.personal_info friends",
         "AllowedHosts": "*",
         "Domain": "api.deli-check.ru", // доменное имя, которое ассоциировано с IP адресом сервера
-        "TesseractPath": "C:\\Program Files\\Tesseract-OCR\\tesseract" // Путь к рабочей папке Tesseract
+        "TesseractPath": "C:\\Program Files\\Tesseract-OCR\\tesseract" // Путь к Tesseract.exe
     }
 
 <br/>
