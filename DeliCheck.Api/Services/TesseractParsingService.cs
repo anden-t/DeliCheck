@@ -8,8 +8,13 @@ namespace DeliCheck.Services
     {
         public (InvoiceModel, List<InvoiceItemModel>) GetInvoiceModelFromText(string text)
         {
-            text = text.Trim().Replace("=", "").Replace(")", "").Replace("(", "").Replace("\t", "    ").Replace(" пор ", "");
-            
+            if(text.Contains("\r"))
+                text = text.Trim().Replace("=", "").Replace(")", "").Replace("(", "").Replace("\t", "    ").Replace(" пор ", "  ").Replace("\r\n\r\n", "\r\n");
+            else 
+                text = text.Trim().Replace("=", "").Replace(")", "").Replace("(", "").Replace("\t", "    ").Replace(" пор ", "  ").Replace("\n\n", "\n");
+
+            Console.WriteLine(text);
+
             var totalCost = Regex.Matches(text, @"(.*?)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$", RegexOptions.Multiline).Cast<Match>().Select(x => 
             {
                 if (!string.IsNullOrWhiteSpace(x.Groups[1].Value) &&

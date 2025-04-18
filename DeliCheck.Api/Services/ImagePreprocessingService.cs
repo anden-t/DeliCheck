@@ -23,7 +23,7 @@ namespace DeliCheck.Services
                 x = 0; y = 0; width = image.Width; height = image.Height;
             }
 
-            image.Mutate(i => i.Crop(new Rectangle() { X = x, Y = y, Width = width, Height = height }).Contrast(_contrastAmount));
+            image.Mutate(i => i.Crop(new Rectangle() { X = x, Y = y, Width = width, Height = height }));
 
             string path = GetPath();
             await image.SaveAsPngAsync(path);

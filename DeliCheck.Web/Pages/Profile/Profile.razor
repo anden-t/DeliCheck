@@ -1,0 +1,255 @@
+﻿@page "/profile"
+@using DeliCheck.Schemas.Requests
+@using DeliCheck.Schemas.Responses
+@using System.Text.Json
+@inject DeliCheckClient _client
+@inject NotificationService _notify
+@inject DialogService _dialogService
+
+<PageTitle>ДелиЧек — Мой профиль</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
+    <div class="rz-shadow-2 rz-border-radius-2 rz-mb-1 card" style="max-width: 600px;">
+
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Мой профиль</RadzenText>
+
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+
+            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="padding-right: 0.5rem;">
+
+                <RadzenImage @bind-Path="@_profileAvatarUrl" class="rounded-image" Style="width: 100%; height: auto; max-width: 150px; min-width: 2rem;" />
+                <RadzenButton class="my-button" Text="Изменить аватар" Click="@OpenEditAvatar"></RadzenButton>
+
+            </RadzenStack>
+
+            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch" Style="flex-grow: 1" Gap="0">
+
+
+                <div class="rz-mb-2">
+                    <RadzenFormField Text="Имя пользователя" class="rz-w-100">
+                        <RadzenTextBox Disabled="true" Value="@(_profile?.Username)" aria-label="Имя пользователя" />
+                    </RadzenFormField>
+                </div>
+
+                <div class="rz-mb-2">
+                    <RadzenFormField Text="Имя" class="rz-w-100">
+                        <ChildContent>
+                            <RadzenTextBox Disabled="@(!_firstnameEditing)" @oninput="OnInputFirstname" Value="@(_profile?.Firstname)" aria-label="Имя" />
+                        </ChildContent>
+                        <End>
+                            <RadzenButton Disabled="@(!_firstnameEnableToSave)" IsBusy=@_firstnameSaving @bind-Visible="_firstnameEditing" Icon="save" Click="SaveEditFirstname" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Icon="@(_firstnameEditing ? "close" : "edit")" Click="ToggleEditFirstname" Variant="Variant.Text" Size="ButtonSize.Small" />
+                        </End>
+                    </RadzenFormField>
+                </div>
+
+                <div class="rz-mb-2">
+                    <RadzenFormField Text="Фамилия" class="rz-w-100">
+                        <ChildContent>
+                            <RadzenTextBox Disabled="@(!_lastnameEditing)" @oninput="OnInputLastname" Value="@(_profile?.Lastname)" aria-label="Фамилия" />
+                        </ChildContent>
+                        <End>
+                            <RadzenButton Disabled="@(!_lastnameEnableToSave)" IsBusy=@_lastnameSaving @bind-Visible="_lastnameEditing" Icon="save" Click="SaveEditLastname" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Icon="@(_lastnameEditing ? "close" : "edit")" Click="ToggleEditLastname" Variant="Variant.Text" Size="ButtonSize.Small" />
+                        </End>
+                    </RadzenFormField>
+                </div>
+
+                <div class="rz-mb-2">
+                    <RadzenFormField Text="Email" class="rz-w-100">
+                        <ChildContent>
+                            <RadzenTextBox Disabled="@(!_emailEditing)" @oninput="OnInputEmail" Value="@(_profile?.Email)" aria-label="Email" />
+                        </ChildContent>
+                        <End>
+                            <RadzenButton Disabled="@(!_emailEnableToSave)" IsBusy=@_emailSaving @bind-Visible="_emailEditing" Icon="save" Click="SaveEditEmail" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Icon="@(_emailEditing ? "close" : "edit")" Click="ToggleEditEmail" Variant="Variant.Text" Size="ButtonSize.Small" />
+                        </End>
+                    </RadzenFormField>
+                </div>
+
+                <div class="rz-mb-2">
+                    <RadzenFormField Text="Номер телефона" class="rz-w-100">
+                        <ChildContent>
+                            <RadzenTextBox Disabled="@(!_phoneEditing)" @oninput="OnInputPhone" Value="@(_profile?.PhoneNumber)" aria-label="Номер телефона" />
+                        </ChildContent>
+                        <End>
+                            <RadzenButton Disabled="@(!_phoneEnableToSave)" IsBusy=@_phoneSaving @bind-Visible="_phoneEditing" Icon="save" Click="SaveEditPhone" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Icon="@(_phoneEditing ? "close" : "edit")" Click="ToggleEditPhone" Variant="Variant.Text" Size="ButtonSize.Small" />
+                        </End>
+                    </RadzenFormField>
+                </div>
+
+            </RadzenStack>
+
+        </RadzenStack>
+    </div>
+</RadzenStack>
+
+<AuthRedirect/>
+
+@code {
+    private ProfileResponseModel? _profile;
+
+    private string _profileAvatarUrl;
+
+    private bool _firstnameEditing;
+    private bool _firstnameEnableToSave;
+    private string _firstnameEdited;
+    private bool _firstnameSaving;
+
+    private bool _lastnameEditing;
+    private bool _lastnameEnableToSave;
+    private string _lastnameEdited;
+    private bool _lastnameSaving;
+
+    private bool _emailEditing;
+    private bool _emailEnableToSave;
+    private string _emailEdited;
+    private bool _emailSaving;
+
+    private bool _phoneEditing;
+    private bool _phoneEnableToSave;
+    private string _phoneEdited;
+    private bool _phoneSaving;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        if (!await _client.IsAuthenticated())
+            return;
+
+        _profile = await _client.GetProfile();
+
+        if (_profile == null)
+            return;
+
+        _profileAvatarUrl = _profile.AvatarUrl;
+        _firstnameEdited = _profile.Firstname;
+        _lastnameEdited = _profile.Lastname;
+        _emailEdited = _profile.Email ?? string.Empty;
+        _phoneEdited = _profile.PhoneNumber ?? string.Empty;
+    }
+
+    private void ToggleEditFirstname(MouseEventArgs args) => _firstnameEditing = !_firstnameEditing;
+    private void OnInputFirstname(ChangeEventArgs args)
+    {
+        _firstnameEdited = (string?)args.Value ?? string.Empty;
+        _firstnameEnableToSave = !string.IsNullOrWhiteSpace(_firstnameEdited) && _firstnameEdited != _profile?.Firstname;
+    }
+    private async Task SaveEditFirstname(MouseEventArgs args)
+    {
+        if (_profile == null)
+            return;
+
+        _firstnameSaving = true;
+
+        if (await EditProfile(_firstnameEdited, _profile.Lastname, _profile.Email, _profile.PhoneNumber, _profile.Username))
+            _profile.Firstname = _firstnameEdited;
+
+        _firstnameEditing = false;
+        _firstnameSaving = false;
+    }
+
+    private void ToggleEditLastname(MouseEventArgs args) => _lastnameEditing = !_lastnameEditing;
+    private void OnInputLastname(ChangeEventArgs args)
+    {
+        _lastnameEdited = (string?)args.Value ?? string.Empty;
+        _lastnameEnableToSave = !string.IsNullOrWhiteSpace(_lastnameEdited) && _lastnameEdited != _profile?.Lastname;
+    }
+    private async Task SaveEditLastname(MouseEventArgs args)
+    {
+        if (_profile == null)
+            return;
+
+        _lastnameSaving = true;
+
+        if (await EditProfile(_profile.Firstname, _lastnameEdited, _profile.Email, _profile.PhoneNumber, _profile.Username))
+            _profile.Lastname = _lastnameEdited;
+
+        _lastnameEditing = false;
+        _lastnameSaving = false;
+    }
+
+    private void ToggleEditEmail(MouseEventArgs args) => _emailEditing = !_emailEditing;
+    private void OnInputEmail(ChangeEventArgs args)
+    {
+        _emailEdited = (string?)args.Value ?? string.Empty;
+        _emailEnableToSave = _emailEdited != _profile?.Email;
+    }
+    private async Task SaveEditEmail(MouseEventArgs args)
+    {
+        if (_profile == null)
+            return;
+
+        _emailSaving = true;
+
+        if (await EditProfile(_profile.Firstname, _profile.Lastname, _emailEdited, _profile.PhoneNumber, _profile.Username))
+            _profile.Email = _emailEdited;
+
+        _emailEditing = false;
+        _emailSaving = false;
+    }
+
+    private void ToggleEditPhone(MouseEventArgs args) => _phoneEditing = !_phoneEditing;
+    private void OnInputPhone(ChangeEventArgs args)
+    {
+        _phoneEdited = (string?)args.Value ?? string.Empty;
+        _phoneEnableToSave = _phoneEdited != _profile?.PhoneNumber;
+    }
+    private async Task SaveEditPhone(MouseEventArgs args)
+    {
+        if (_profile == null)
+            return;
+
+        _phoneSaving = true;
+
+        if (await EditProfile(_profile.Firstname, _profile.Lastname, _profile.Email, _phoneEdited, _profile.Username))
+            _profile.PhoneNumber = _phoneEdited;
+
+        _phoneEditing = false;
+        _phoneSaving = false;
+    }
+
+    private async Task<bool> EditProfile(string firstname, string lastname, string email, string phoneNumber, string username)
+    {
+        try
+        {
+            await _client.EditProfile(firstname, lastname, email, phoneNumber, username);
+            return true;
+        }
+        catch (ApiException ex)
+        {
+            if (ex.ApiResponse?.Message != null)
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+
+            return false;
+        }
+    }
+
+    public async Task OpenEditAvatar()
+    {
+        var base64 = await _dialogService.OpenAsync<CropAvatar>($"Выберите изображение",
+               options: new DialogOptions()
+                   {
+                       Resizable = false,
+                       Draggable = true,
+                   });
+
+        if (base64 == null)
+            return;
+
+        try
+        {
+            await _client.SetAvatar(base64);
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Ваш аватар обновлен", Detail = "Перезагрузите страницу, чтобы увидеть", Duration = 4000 });
+
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+    }
+}

@@ -1,0 +1,13 @@
+﻿@inject NavigationManager _nav
+@inject DeliCheckClient _client
+@page "/auth/logout"
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        await _client.Logout();
+        await _client.ClearLogin();
+        _nav.NavigateTo("/auth/login");
+    }
+}

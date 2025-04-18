@@ -1,0 +1,174 @@
+﻿@using DeliCheck.Schemas.Responses
+@using Microsoft.JSInterop
+@using System.Text.Json
+
+@inject DeliCheckClient _client
+@inject NotificationService _notify
+@inject TooltipService _tooltip
+@inject DialogService _dialog
+
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Stretch" Gap="0">
+
+    <RadzenStack class="rz-mb-0" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenFormField Text="Введите имя друга" class="rz-w-100 rz-mr-2" Style="flex-grow: 1">
+            <RadzenTextBox @bind-Value="_friendName" @oninput="@((s) => FriendNameChanged((string?)s.Value ?? string.Empty))" aria-label="Имя друга" />
+        </RadzenFormField>
+        <RadzenButton MouseEnter="@(args => ShowAddOfflineFriendTooltip(args))" class="my-button" IsBusy=@_addOfflineFriendBusy @bind-Disabled="@_addOfflineFriendDisabled" ButtonStyle="ButtonStyle.Primary" Click=@AddOfflineFriend Icon="add"></RadzenButton>
+
+    </RadzenStack>
+
+
+    <RadzenText class="rz-mt-5" Visible="@_friendsCountZero" TextAlign="TextAlign.Center">К сожалению, вы не добавили еще ни одного друга :(<br />Воспользуйтесь поиском, чтобы это исправить</RadzenText>
+    <RadzenText class="rz-mt-5" Visible="@_friendsSearchZero" TextAlign="TextAlign.Center">К сожалению, по вашему запросу не найдено ни одного человека :(<br />Попробуйте как-нибудь по-другому</RadzenText>
+
+    <RadzenDataList Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "max-height:500px;height:100%;overflow:auto;margin-top:1rem;padding:0px" : "")"
+    WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
+    Data="@_friends" TItem="Friend" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" IsLoading="@_isLoading">
+
+        <Template Context="friend">
+
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenCheckBox  TValue="bool" Value="friend.Selected" Change="@(value => Select(friend, value))"/>
+                    <RadzenImage class="rounded-image rz-mx-3" Path="@(friend.AvatarUrl)" Style="width: 3rem; height: 3rem;" />
+
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                        <RadzenText class="@(friend.FriendLabelId.HasValue ? "rz-mb-0" : "rz-mb-0")" Text="@($"{friend.Firstname} {friend.Lastname}")" />
+                        <RadzenText Visible=friend.FriendLabelId.HasValue class="rz-mb-0" style="font-size: 0.75rem" Text="У вас в друзьях" />
+
+                    </RadzenStack>
+                </RadzenStack>
+
+            </RadzenStack>
+
+        </Template>
+
+    </RadzenDataList>
+
+    <RadzenButton class="my-button rz-w-100 rz-mt-3" Text="Применить" Click="Submit"></RadzenButton>
+
+</RadzenStack>
+
+<style>
+    .rz-datalist-data {
+    padding: 0px;
+    }
+
+    .rz-datalist-data > li {
+    border-width: 1px 0px 0px 0px;
+    border-radius: 0px;
+    padding: 0.35rem 0px;
+    }
+</style>
+
+@code {
+    private bool allowVirtualization = true;
+    private string _friendName = string.Empty;
+
+    private bool _friendsCountZero = false;
+    private bool _friendsSearchZero = false;
+    private bool _isLoading = false;
+
+    private bool _addOfflineFriendDisabled = true;
+    private bool _addOfflineFriendBusy = false;
+
+    private IQueryable<Friend> _friends;
+
+    [Parameter]
+    public List<Friend> SelectedFriends { get; set; }
+
+    private void Select(Friend friend, bool value)
+    {
+        friend.Selected = value;
+
+
+
+        if (value)
+            SelectedFriends.Add(friend);
+        else
+        {
+           // var toDelete = SelectedFriends.FirstOrDefault(x => (friend.HasProfile ? (x.UserId == friend.UserId) : (friend.FriendLabelId == x.FriendLabelId)));
+            SelectedFriends.Remove(friend);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (SelectedFriends == null)
+            SelectedFriends = new List<Friend>();
+
+        await FriendNameChanged(string.Empty);
+    }
+
+    private async Task FriendNameChanged(string friendName)
+    {
+        _isLoading = true;
+        await InvokeAsync(() => StateHasChanged());
+        var friendsList = (await _client.SearchFriends(friendName)).Friends.FromList();
+
+        foreach (var f in friendsList)
+        {
+            f.Selected = SelectedFriends.Any(x => (f.HasProfile ? (x.UserId == f.UserId) : (f.FriendLabelId == x.FriendLabelId)));
+        }
+
+        foreach (var f in SelectedFriends)
+        {
+            if (!friendsList.Any(x => (f.HasProfile ? (x.UserId == f.UserId) : (f.FriendLabelId == x.FriendLabelId))))
+                friendsList.Add(f);
+        }
+
+        _friends = friendsList.OrderByDescending(x => x.Selected).AsQueryable();
+        _friendsCountZero = string.IsNullOrWhiteSpace(friendName) && _friends.Count() == 0;
+        _friendsSearchZero = !string.IsNullOrWhiteSpace(friendName) && _friends.Count() == 0;
+
+        _addOfflineFriendDisabled = string.IsNullOrWhiteSpace(friendName);
+
+        _isLoading = false;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task AddOfflineFriend()
+    {
+        _addOfflineFriendBusy = true;
+        await InvokeAsync(() => StateHasChanged());
+
+        string value = _friendName.Trim();
+
+        string firstname = value;
+        string? lastname = string.Empty;
+
+        if (value.Contains(" "))
+        {
+            var data = value.Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            firstname = data[0];
+            lastname = string.Join(" ", data.Skip(1));
+        }
+
+        try
+        {
+            await _client.AddOfflineFriend(firstname, lastname);
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = $"Друг {value} добавлен", Detail = "Теперь вы можете разделить с ним счет", Duration = 2000 });
+            _friendName = string.Empty;
+            await FriendNameChanged(_friendName);
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _addOfflineFriendBusy = false;
+            await InvokeAsync(() => StateHasChanged());
+        }
+
+    }
+
+    private void ShowAddOfflineFriendTooltip(ElementReference elementReference, TooltipOptions? options = null)
+        => _tooltip.Open(elementReference, ds => @<div>Укажите имя незарегистрированного друга<br /> в поле слева и нажмите,<br /> чтобы добавить его в друзья</div>, new TooltipOptions() { Position = TooltipPosition.Left });
+
+    private void Submit(MouseEventArgs args) => _dialog.Close(SelectedFriends);
+}

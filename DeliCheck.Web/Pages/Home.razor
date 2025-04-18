@@ -1,0 +1,77 @@
+﻿@page "/"
+@using System.Text.Json
+@using DeliCheck.Web.Models
+@using Blazorise.LottieAnimation
+
+@inject DeliCheckClient _client
+@inject DialogService _dialog
+@inject NotificationService _notify
+@inject NavigationManager _nav
+@inject IJSRuntime _js
+
+<PageTitle>ДелиЧек — Главная</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
+
+    <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
+
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Разделить чек</RadzenText>
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H6">Загрузите фото чека, чтобы разделить его с друзьями!</RadzenText>
+
+        <LottieAnimation Path="https://lottie.host/c0963a9f-abb5-4586-99c4-1dba69a48a16/xVH2YwVDUT.json"
+        Loop="true"
+        Paused=@_animPaused
+        style="aspect-ratio: 1; width: 100%; max-width: 200px; margin-inline: auto; margin-bottom: 1rem;"></LottieAnimation>
+
+        <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-1">
+            <RadzenButton class="my-button" @bind-IsBusy=@_isBusy BusyText="Распознаем позиции..." Text="Загрузить чек" Click="@OpenFileUpload"></RadzenButton>
+        </RadzenStack>
+
+        <RadzenText TextAlign="TextAlign.Center" class="rz-mb-0" style="font-style: italic; font-size: 0.7rem">На фото чек должен быть расположен ровно, а все позиции должны быть читаемы</RadzenText>
+        <RadzenText TextAlign="TextAlign.Center" class="rz-mb-1" style="font-style: italic; font-size: 0.7rem">После загрузки обрежьте изображение чека так, чтобы было видно <b>только позиции</b></RadzenText>
+    </div>
+
+</RadzenStack>
+
+<AuthRedirect/>
+
+
+
+@code {
+    bool _isBusy;
+    bool _animPaused = true;
+
+    public async void OpenFileUpload()
+    {
+        var res = await _dialog.OpenAsync<CropCheck>($"Выберите изображение",
+               options: new DialogOptions()
+                   {
+                       Resizable = false,
+                       Draggable = true,
+                   }) as CropCheckResult;
+
+        if (res == null)
+            return;
+
+        _isBusy = true;
+        _animPaused = false;
+        await InvokeAsync(() => StateHasChanged());
+
+        try
+        {
+            var invoice = await _client.InvoiceOcr(res);
+            _nav.NavigateTo($"/deli?id={invoice.Id}");
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _isBusy = false;
+            _animPaused = true;
+            await InvokeAsync(() => StateHasChanged());
+        }
+    }
+}
+

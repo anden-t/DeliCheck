@@ -1,0 +1,18 @@
+﻿@inject NavigationManager _nav
+@inject DeliCheckClient _client
+@page "/auth/register-guest"
+
+
+@code {
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public string? returnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        var login = await _client.RegisterAsGuest("Гость", string.Empty);
+        await _client.SaveLogin(login);
+        _nav.NavigateTo(returnUrl ?? "/");
+    }
+}

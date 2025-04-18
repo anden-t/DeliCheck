@@ -1,0 +1,54 @@
+﻿@inject DialogService _dialogService
+@inject NotificationService _notify
+
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Stretch" Gap="0">
+    <RadzenFormField Text="Чаевые в процентах от счета" class="rz-w-100 rz-mr-2" Style="flex-grow: 1">
+        <RadzenNumeric @bind-Value="_value" Min="1" Max="99" ShowUpDown="false"  @oninput="@((s) => ValueChanged((string?)s.Value ?? string.Empty))" aria-label="Процентов от счета" />
+    </RadzenFormField>
+
+    <RadzenText Visible=@(!_submitDisabled) Style="font-weight: 600" class="rz-my-3" Text="@_text"></RadzenText>
+    <RadzenButton @bind-Disabled="@_submitDisabled" class="my-button rz-w-100 rz-mt-3" Text="Применить" Click="Submit"></RadzenButton>
+    <RadzenText TextAlign="TextAlign.Center" class="rz-mb-0" style="font-style: italic; font-size: 0.7rem">Величину скидки можно будет изменить, так же, как и цену любой позиции</RadzenText>
+</RadzenStack>
+
+
+@code {
+    private bool _submitDisabled = true;
+    private int _value;
+    private string _text;
+
+    [Parameter]
+    public int Cost { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _value = 15;
+        await ValueChanged(_value.ToString());
+    }
+
+    private async Task ValueChanged(string s)
+    {
+        if (!int.TryParse(s.Replace("%", string.Empty).Trim(), out int result))
+        {
+            _submitDisabled = true;
+            return;
+        }
+
+        if (result > 0 && result < 100)
+        {
+            _text = $"Это {(result / 100m) * Cost} ₽";
+            _submitDisabled = false;
+            await InvokeAsync(() => StateHasChanged());
+        }
+        else
+        {
+            _submitDisabled = true;
+        }
+    }
+
+    private async Task Submit(MouseEventArgs args)
+    {
+        _dialogService.Close(_value);
+    }
+}

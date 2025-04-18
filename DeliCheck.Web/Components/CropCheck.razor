@@ -1,0 +1,125 @@
+﻿@using Cropper.Blazor.Components
+@using Cropper.Blazor.Models
+@using DeliCheck.Web.Models
+
+@inject DialogService _dialogService
+@inject NotificationService _notify
+
+<div class="crop-cont" style="max-height: 400px; width: 100%; display:@_displayCropper">
+    <CropperComponent Src="@_cropSrc" @ref="cropperComponent" Options="cropperOptions" Class="crop"/>
+</div>
+
+<RadzenUpload ChooseText="Выбрать изображение" Multiple="false" Accept="@types" Change=@OnChange Style="width: 100%" InputAttributes="@(new Dictionary<string,object>{ { "aria-label", "select file" }})" />
+
+<RadzenButton @bind-Disabled="@_submitDisabled" BusyText="Загружаю..." IsBusy=@_submitBusy class="my-button rz-w-100 rz-mt-3" Text="Применить" Click="Submit"></RadzenButton>
+
+<style>
+    .crop {
+    max-height: 400px;
+    max-width: 100%;
+    }
+</style>
+
+@code {
+    private const string types = "image/jpeg,image/png";
+    private const long maxSize = 10485760;
+
+    private string _cropSrc = "https://api.deli-check.ru/avatars/default";
+    private string _displayCropper = "none";
+    private bool _submitDisabled = true;
+    private bool _submitBusy = false;
+
+    private CropperComponent? cropperComponent = null!;
+
+    public byte[] Image { get; set; }
+
+    private Options cropperOptions = new Options
+    {
+        ViewMode = ViewMode.Vm1,
+
+    };
+
+    private async Task OnChange(UploadChangeEventArgs args)
+    {
+        if (args.Files.Count() != 1)
+        {
+            _displayCropper = "none";
+            _submitDisabled = true;
+            return;
+        }
+
+        var file = args.Files.First();
+
+        if (file.Size > maxSize || !types.Contains(file.ContentType))
+        {
+            if (file.Size > maxSize)
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Файл должен весить не более 10 МБ", Detail = "Попробуйте еще раз", Duration = 4000 });
+
+            if (!types.Contains(file.ContentType))
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Поддерживаются форматы только .jpg/.jpeg и .png", Detail = "Попробуйте еще раз", Duration = 4000 });
+
+
+            _displayCropper = "none";
+            _submitDisabled = true;
+
+            return;
+        }
+
+        string oldSrc = _cropSrc;
+
+        _cropSrc = await cropperComponent!.GetImageUsingStreamingAsync(file.Source, file.Source.Size);
+
+        var stream = file.OpenReadStream(maxSize);
+        Image = new byte[file.Size];
+
+        int readed = 0;
+
+        do
+        {
+            readed += await stream.ReadAsync(Image, readed, (int)file.Size - readed);
+        }
+        while (readed < file.Size);
+
+        stream.Close();
+        
+        cropperComponent?.Destroy();
+        cropperComponent?.RevokeObjectUrlAsync(oldSrc);
+
+        _displayCropper = "block";
+        _submitDisabled = false;
+    }
+
+    private async Task Submit(MouseEventArgs args)
+    {
+        if (Image == null)
+            return;
+
+        var cropBox = await cropperComponent!.GetDataAsync(false);
+
+        var result = new CropCheckResult()
+        {
+            ImageData = Image,
+            X1 = (int)cropBox.X,
+            Y1 = (int)cropBox.Y,
+            X2 = (int)(cropBox.X + cropBox.Width),
+            Y2 = (int)(cropBox.Y + cropBox.Height)
+        };
+
+        _dialogService.Close(result);
+    }
+
+
+    // var stream = file.OpenReadStream(maxSize);
+    // Image = new byte[file.Size];
+
+    // int readed = 1;
+
+    // while (readed != 0)
+    // {
+    //     readed = await stream.ReadAsync(Image, readed, (int)file.Size - readed);
+    // }
+    //stream.Close();
+    // base64 = $"data:image/png;base64,{Convert.ToBase64String(Image)}";
+}
+
+            

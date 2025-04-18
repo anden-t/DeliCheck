@@ -1,0 +1,60 @@
+﻿@page "/auth/vk"
+
+@using Blazorise.LottieAnimation
+
+@inject DeliCheckClient _client
+@inject NavigationManager _nav
+@inject NotificationService _notify
+
+<PageTitle>ДелиЧек — Авторизация</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
+    <div class="rz-shadow-2 rz-border-radius-2 rz-mb-1 card" style="padding: 2rem; max-width: 350px;">
+        <LottieAnimation Path="https://lottie.host/c0963a9f-abb5-4586-99c4-1dba69a48a16/xVH2YwVDUT.json"
+        Loop="true"
+        Paused="false"
+        style="aspect-ratio: 1; width: 100%; max-width: 200px; margin-inline: auto; margin-bottom: 1rem;"></LottieAnimation>
+    </div>
+</RadzenStack>
+
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "state")]
+    public string? State { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "device_id")]
+    public string? DeviceId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Code) 
+            || string.IsNullOrWhiteSpace(State)
+            || string.IsNullOrWhiteSpace(DeviceId))
+        {
+
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Нет параметров для входа с ВК", Detail = "Попробуйте еще раз", Duration = 4000 });
+            await Task.Delay(2000);
+            _nav.NavigateTo(Program.SiteUrl);
+            return;
+        }
+
+        try
+        {
+            var response = await _client.VkCallback(Code, State, DeviceId);
+
+            await _client.SaveLogin(response);
+            _nav.NavigateTo("/");
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+    }
+
+}

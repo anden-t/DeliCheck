@@ -1,0 +1,119 @@
+﻿@page "/auth/login"
+@inject DeliCheckClient _client
+@inject NavigationManager _nav
+@inject NotificationService _notify
+
+<PageTitle>ДелиЧек — Авторизация</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
+    <div class="rz-shadow-2 rz-border-radius-2 rz-mb-1 card" style="padding: 2rem; max-width: 350px;">
+        <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Stretch" Gap="0">
+
+            <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Войдите в аккаунт</RadzenText>
+
+            <div class="rz-mb-1">
+                <RadzenFormField Text="Имя пользователя" class="rz-w-100">
+                    <RadzenTextBox @bind-Value="_username" @oninput="@((s) => UsernameChanged((string?)s.Value ?? string.Empty))" aria-label="Имя пользователя" />
+                </RadzenFormField>
+            </div>
+            <div class="rz-mb-3">
+                <RadzenFormField Text="Пароль" class="rz-w-100">
+                    <ChildContent>
+                        <RadzenTextBox @bind-Value="_password" @oninput="@((s) => PasswordChanged((string?)s.Value ?? string.Empty))" Visible="@(!_passwordNotVisible)" />
+                        <RadzenPassword @bind-Value="_password" @oninput="@((s) => PasswordChanged((string?)s.Value ?? string.Empty))" Visible="@_passwordNotVisible" />
+                    </ChildContent>
+                    <End>
+                        <RadzenButton Icon="@(_passwordNotVisible ? "visibility" : "visibility_off")" Click="TogglePassword" Variant="Variant.Text" Size="ButtonSize.Small" />
+                    </End>
+                </RadzenFormField>
+            </div>
+
+            <RadzenButton Variant="Variant.Flat" class="rz-mb-0 my-button" @bind-Disabled=@_loginDisabled IsBusy=@_loginBusy BusyText="Входим..." Click=@LogIn Text="Войти" ButtonStyle="ButtonStyle.Primary" />
+
+            <div class="rz-my-2" style="display: flex; justify-content: center; align-items: center;">
+                <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
+                <RadzenText style="font-size: 0.8rem" class="rz-mx-4 rz-my-0">или</RadzenText>
+                <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
+            </div>
+            <RadzenButton IsBusy=_loginVkBusy BusyText="Входим..." Variant="Variant.Flat" class="rz-mb-3 my-button" Text="Войти с VK" Click=@Vk ButtonStyle="ButtonStyle.Primary" />
+
+            <RadzenText class="rz-mb-0" TextAlign="TextAlign.Center">Нет аккаунта? <RadzenLink Path="@($"/auth/register?returnUrl={returnUrl}")" Text="Зарегистрируйтесь" /></RadzenText>
+
+        </RadzenStack>
+    </div>
+    <div>
+        <RadzenLink Path="@($"/auth/register-guest?returnUrl={returnUrl}")" Text="Продолжить без регистрации" />
+    </div>
+
+</RadzenStack>
+
+@code {
+    private bool _passwordNotVisible = true;
+    private bool _loginBusy = false;
+    private bool _loginVkBusy = false;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+    private bool _loginDisabled = true;
+
+    [SupplyParameterFromQuery]
+    [Parameter]
+    public string? returnUrl { get; set; }
+
+    private async Task LogIn()
+    {
+        try
+        {
+            _loginBusy = true;
+            await InvokeAsync(() => StateHasChanged());
+
+            var response = await _client.Login(_username, _password);
+
+            await _client.SaveLogin(response);
+            _nav.NavigateTo(returnUrl ?? "/");
+        }
+        catch (ApiException ex)
+        {
+            if (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Неправильный логин или пароль", Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _loginBusy = false;
+            await InvokeAsync(() => StateHasChanged());
+        }
+    }
+
+    private async Task Vk()
+    {
+        try
+        {
+            _loginVkBusy = true;
+            await InvokeAsync(() => StateHasChanged());
+
+            var response = await _client.Vk();
+            _nav.NavigateTo(response.Url);
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _loginVkBusy = false;
+            await InvokeAsync(() => StateHasChanged());
+        }
+        
+    }
+
+    private void TogglePassword(MouseEventArgs args) => _passwordNotVisible = !_passwordNotVisible;
+
+    private void UsernameChanged(string username)
+    {
+        _loginDisabled = string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(_password);
+    }
+
+    private void PasswordChanged(string password) 
+    {
+        _loginDisabled = string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(password);
+    }
+}

@@ -1,0 +1,14 @@
+﻿@inject NavigationManager nav
+@inject DeliCheckClient client
+
+@code {
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        if (!(await client.IsAuthenticated()))
+        {
+            nav.NavigateTo($"/auth/login?returnUrl={Uri.EscapeDataString(new Uri(nav.Uri).AbsolutePath)}");
+        }
+    }
+}

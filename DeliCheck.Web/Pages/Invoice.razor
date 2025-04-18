@@ -1,0 +1,173 @@
+﻿@page "/invoice"
+@using DeliCheck.Schemas.Responses
+@using DeliCheck.Web.Models
+@using Append.Blazor.WebShare
+
+@inject DeliCheckClient _client
+@inject DialogService _dialog
+@inject NotificationService _notify
+@inject ContextMenuService _contextMenuService
+@inject NavigationManager _nav
+@inject IWebShareService _webShareService
+
+<PageTitle>ДелиЧек — Разделить чек</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
+    <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
+
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Итого по чеку</RadzenText>
+
+        <RadzenText class="rz-mb-1" TextAlign="TextAlign.Left" TextStyle="TextStyle.H6" style="font-weight: 600;">Исходный чек</RadzenText>
+
+        <RadzenDataGrid class="rz-mb-3" AllowColumnResize="true" Visible="true" AllowPaging=false Style="height:100%; margin-top:1rem; padding:0px; overflow-x:hidden"
+        Data="@_items" TItem="InvoiceItem" IsLoading="@_isLoading">
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(InvoiceItem.Name)" Title="Название" Frozen="false" />
+                <RadzenDataGridColumn Property="@nameof(InvoiceItem.Count)" Title="Кол-во" Frozen="false"/>
+                <RadzenDataGridColumn Property="@nameof(InvoiceItem.Cost)" FormatString="{0} ₽" Title="Цена" Frozen="false" />
+            </Columns>
+        </RadzenDataGrid>
+
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
+            <RadzenText class="rz-mb-5" TextAlign="TextAlign.Right" Text="@_textPayed"></RadzenText>
+            <RadzenText class="rz-mb-5" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textTotal"></RadzenText>
+        </RadzenStack>
+
+
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Left" TextStyle="TextStyle.H6" style="font-weight: 600;">Позиции пользователей</RadzenText>
+
+
+        <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "positions" })" AllowVirtualization=true Data="@_bills" TItem="UserBillItem">
+            <Template Context="bill">
+
+                <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Start" Gap="0">
+
+                    <RadzenStack class="rz-mb-3" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                        <RadzenImage class="rounded-image rz-mx-3" Path="@(bill.OwnerAvatarUrl)" Style="width: 3rem; height: 3rem;" />
+                        <RadzenText class="rz-mb-0" Style="font-weight: 600" Text="@($"{bill.OwnerFirstname} {bill.OwnerLastname}")" />
+                    </RadzenStack>
+
+                    <RadzenText class="rz-mb-1" TextAlign="TextAlign.Left">Позиции пользователя</RadzenText>
+                </RadzenStack>
+
+
+                <RadzenDataGrid class="rz-mb-3" AllowColumnResize="true" Visible="true" AllowPaging=false Style="height:100%; margin-top:0rem; padding:0px; overflow-x:hidden"
+                Data="@bill.ItemsQueryable" TItem="BillItemResponseModel" IsLoading="@_isLoading">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Name)" Title="Название" Frozen="false" />
+                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Count)" Title="Кол-во" Frozen="false" />
+                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Cost)" FormatString="{0} ₽" Title="Цена" Frozen="false" />
+                    </Columns>
+                </RadzenDataGrid>
+
+                <RadzenText class="rz-mb-1" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@($"Итого: {bill.TotalCost} ₽")"></RadzenText>
+            </Template>
+        </RadzenDataList>
+
+        <div style="width: 100%; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
+
+
+        <RadzenButton Icon="share" class="rz-mt-3 my-button rz-w-100" Click=@Share Text="Поделиться"></RadzenButton>
+    </div>
+</RadzenStack>
+
+<style>
+    div[list=positions] > .rz-datalist-data {
+    padding: 0px;
+    }
+
+    div[list=positions] > .rz-datalist-data > li {
+    border-width: 1px 0px 0px 0px;
+    border-radius: 0px;
+    padding: 0.5rem 0px;
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? Id { get; set; }
+
+    public string _textPayed;
+    public string _textTotal;
+
+    private bool _isLoading = false;
+
+    private InvoiceResponseModel _invoice;
+    private IQueryable<InvoiceItem> _items;
+    private IQueryable<UserBillItem> _bills;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        if (Id == null || !int.TryParse(Id, out int id))
+            return;
+
+        _isLoading = true;
+        await InvokeAsync(() => StateHasChanged());
+
+        _invoice = await _client.GetInvoice(id);
+
+        if (!_invoice.BillsCreated)
+        {
+            _nav.NavigateTo($"/deli?id={id}");
+            return;
+        }
+
+        _items = _invoice.Items.FromList().AsQueryable();
+        _bills = (await _client.GetBills(_invoice.Id)).FromList().AsQueryable();
+
+        _textPayed = $"Чек оплатил {_bills.First().InvoiceOwnerFirstname} {_bills.First().InvoiceOwnerLastname}";
+        _textTotal = $"Итого: {_invoice.TotalCost} ₽";
+
+        if (await _client.IsAuthenticated())
+        {
+            var myProfile = await _client.GetProfile();
+
+            foreach (var bill in _bills)
+            {
+                if (!bill.OfflineOwner && bill.OwnerId == myProfile.Id)
+                {
+                    bill.OwnerLastname = $"({bill.OwnerFirstname}{(string.IsNullOrWhiteSpace(bill.OwnerLastname) ? string.Empty : $" {bill.OwnerLastname}")})";
+                    bill.OwnerFirstname = "Я";
+                }
+            }
+        }
+
+
+
+        _isLoading = false;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task Share()
+    {
+        if (!await _webShareService.IsSupportedAsync())
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Info, Summary = "Ваш браузер не поддерживает функцию \"Поделиться\"", Detail = "Просто скопируйте ссылку", Duration = 4000 });
+            return;
+        }
+
+        await _webShareService.ShareAsync(new ShareData() { Text = "Text", Title = "title", Url = $"{Program.SiteUrl}invoice?id={Id}" });
+    }
+}
+        @* <Template Context="item">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
+
+                     <RadzenFormField Text="Название" Style="width: 100%; margin-right: 0.5rem">
+                        <RadzenTextBox Disabled="true" Value="@(item.Name)" aria-label="Название" />
+                     </RadzenFormField>
+
+                    <RadzenFormField Text="Количество" style="max-width: 5rem; width:100%; margin-right: 0.5rem">
+                        <RadzenTextBox Disabled="true" Value="@(item.Count.ToString())" aria-label="Название" />
+                     </RadzenFormField>
+
+                    <RadzenFormField Text="@($"Цена за {(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())}")" style="max-width: 5rem; width:100%">
+                        <RadzenNumeric TValue="int" ShowUpDown="false" Disabled="true" Value="@(item.Cost)" Format="# ₽" aria-label="Цена" />
+                    </RadzenFormField>
+                </RadzenStack>
+            </Template> *@
