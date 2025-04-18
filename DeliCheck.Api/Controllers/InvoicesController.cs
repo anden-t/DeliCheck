@@ -302,6 +302,9 @@ namespace DeliCheck.Controllers
                 db.InvoicesItems.Remove(item);
                 await db.SaveChangesAsync();
 
+                invoice.TotalCost = db.InvoicesItems.Where(x => x.InvoiceId == invoice.Id).Sum(x => x.Cost);
+                await db.SaveChangesAsync();
+
                 return Ok(ApiResponse.Success());
             }
         }
@@ -332,6 +335,9 @@ namespace DeliCheck.Controllers
                 item.Cost = request.Cost;
                 item.Count = request.Count;
                 item.Name = request.Name;
+
+                await db.SaveChangesAsync();
+                invoice.TotalCost = db.InvoicesItems.Where(x => x.InvoiceId == invoice.Id).Sum(x => x.Cost);
                 await db.SaveChangesAsync();
 
                 return Ok(ApiResponse.Success());
@@ -367,6 +373,8 @@ namespace DeliCheck.Controllers
                 };
 
                 db.InvoicesItems.Add(item);
+                await db.SaveChangesAsync();
+                invoice.TotalCost = db.InvoicesItems.Where(x => x.InvoiceId == invoice.Id).Sum(x => x.Cost);
                 await db.SaveChangesAsync();
                 return Ok(new InvoiceItemResponse(new InvoiceItemResponseModel() { Name = item.Name, Id = item.Id, Cost = item.Cost, Count = item.Count }));
             }

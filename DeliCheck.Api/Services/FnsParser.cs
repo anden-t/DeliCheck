@@ -60,7 +60,7 @@ namespace DeliCheck.Services
                 // Зашифрованные данные алгоритмом AES-GCM
                 var responseBody = await response.Content.ReadAsByteArrayAsync();
 
-                // Дешифрование данных Реверс-инжениринг https://proverkacheka.com/scripts/common/lib/crypto.js
+                // Дешифрование данных Реверс-инжениринг https://proverkacheka.com/scripts/common/lib/crypto.js)    
                 byte[] tKey = SHA256.HashData(Encoding.UTF8.GetBytes(_key)).ToArray();
                 byte[] iv = responseBody.Skip(responseBody.Length - 12).ToArray();
                 byte[] tag = responseBody.Skip(responseBody.Length - 28).Take(16).ToArray();
