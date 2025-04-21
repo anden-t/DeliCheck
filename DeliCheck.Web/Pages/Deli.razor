@@ -650,7 +650,7 @@
                 {
                     decimal userPart;
 
-                    if (item.Count == 1 || item.CountInteger)
+                    if (item.Count == 1 || !item.CountInteger)
                     {
                         var allParts = item.UsersParts.Values.Sum();
                         userPart = Math.Round((item.Count / allParts) * item.UsersParts[user], 2);
