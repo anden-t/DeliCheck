@@ -71,6 +71,7 @@ namespace DeliCheck.Controllers
                     if (qr != null)
                     {
                         await _fnsParser.UpdateKeyAsync();
+                        Console.WriteLine(qr);
                         (invoice, items) = await _fnsParser.GetInvoiceModelAsync(qr);
                         if(invoice != null && items != null) parsed = true;
                     }
@@ -121,6 +122,62 @@ namespace DeliCheck.Controllers
             {
                 _logger.LogError($"Ошибка при распознавании чека: {ex.GetType().Name} {ex.Message} {ex.StackTrace} {ex.InnerException?.GetType()?.Name ?? ""} {ex.InnerException?.Message ?? ""}");
                 return StatusCode(500, ApiResponse.Failure("Не удалось распознать чек. Попробуйте сфотографировать еще раз!"));
+            }
+        }
+
+        /// <summary>
+        /// Распознает чек по OCR либо по QR-коду из ФНС
+        /// </summary>
+        /// <param name="sessionToken">Токен сессии</param>
+        /// <param name="file">Изображение</param>
+        /// <param name="x1">Левая точка для обрезки фото</param>
+        /// <param name="y1">Верхняя точка для обрезки фото</param>
+        /// <param name="x2">Правая точка для обрезки фото</param>
+        /// <param name="y2">Нижняя точка для обрезки фото</param>
+        /// <returns>Ответ с моделью чека</returns>
+        [HttpPost("qr")]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.InternalServerError)]
+        [ProducesResponseType(typeof(InvoiceResponse), (int)System.Net.HttpStatusCode.OK)]
+        public async Task<IActionResult> QrAsync([FromHeader(Name = "x-session-token")][Required] string sessionToken, QrFnsRequest request)
+        {
+            var token = _authService.GetSessionTokenByString(sessionToken);
+            if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
+            try
+            {
+                await _fnsParser.UpdateKeyAsync();
+
+                InvoiceModel? invoice;
+                List<InvoiceItemModel>? items;
+
+                (invoice, items) = await _fnsParser.GetInvoiceModelAsync(request.Content);
+
+                if (invoice != null && items != null)
+                {
+                    using (var db = new DatabaseContext())
+                    {
+                        invoice.OwnerId = token.UserId;
+                        invoice.CreatedTime = DateTime.UtcNow;
+                        db.Invoices.Add(invoice);
+                        await db.SaveChangesAsync();
+
+                        foreach (var item in items)
+                        {
+                            item.InvoiceId = invoice.Id;
+                            db.InvoicesItems.Add(item);
+                        }
+
+                        await db.SaveChangesAsync();
+                        return Ok(new InvoiceResponse(invoice.ToResponseModel(db)));
+                    }
+                }
+                else return BadRequest(ApiResponse.Failure("Не удалось получить информацию по QR-коду"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Ошибка при получении информацию по QR-коду: {ex.GetType().Name} {ex.Message} {ex.StackTrace} {ex.InnerException?.GetType()?.Name ?? ""} {ex.InnerException?.Message ?? ""}");
+                return StatusCode(500, ApiResponse.Failure("Не удалось получить информацию по QR-коду"));
             }
         }
 

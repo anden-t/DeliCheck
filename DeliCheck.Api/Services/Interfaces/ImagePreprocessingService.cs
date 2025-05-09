@@ -1,4 +1,5 @@
 ﻿using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
 
 namespace DeliCheck.Services
@@ -26,7 +27,7 @@ namespace DeliCheck.Services
             image.Mutate(i => i.Crop(new Rectangle() { X = x, Y = y, Width = width, Height = height }));
 
             string path = GetPath();
-            await image.SaveAsPngAsync(path);
+            await image.SaveAsJpegAsync(path);
             return path;
         }
 
@@ -35,7 +36,7 @@ namespace DeliCheck.Services
             Directory.CreateDirectory("InvoicesImages");
             Interlocked.Increment(ref _imgIndex);
 
-            return Path.GetFullPath($"InvoicesImages/{_imgIndex}.png");
+            return Path.GetFullPath($"InvoicesImages/{_imgIndex}.jpg");
         }
     }
 }

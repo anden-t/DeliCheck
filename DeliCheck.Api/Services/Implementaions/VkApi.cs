@@ -19,9 +19,11 @@ namespace DeliCheck.Services
 
         private readonly IAvatarService _avatarService;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<VkApi> _logger;
 
-        public VkApi(IAvatarService avatarService, IConfiguration configuration)
+        public VkApi(IAvatarService avatarService, IConfiguration configuration, ILogger<VkApi> logger)
         {
+            _logger = logger;
             _avatarService = avatarService;
             _configuration = configuration;
             AppId = _configuration["VkAppId"];
@@ -144,48 +146,56 @@ namespace DeliCheck.Services
                 {
                     foreach (var item in items)
                     {
-                        var vkId = item?["id"]?.GetValue<long>();
-                        var user = db.Users.FirstOrDefault(x => x.VkId == vkId);
-                        var offlineFriend = db.OfflineFriends.FirstOrDefault(x => x.VkId == vkId);
-
-                        if(user != null)
+                        try
                         {
-                            if(offlineFriend != null)
+                            var vkId = item?["id"]?.GetValue<long>();
+                            var user = db.Users.FirstOrDefault(x => x.VkId == vkId);
+                            var offlineFriend = db.OfflineFriends.FirstOrDefault(x => x.VkId == vkId);
+
+                            if (user != null)
                             {
-                                db.OfflineFriends.Remove(offlineFriend);
+                                if (offlineFriend != null)
+                                {
+                                    db.OfflineFriends.Remove(offlineFriend);
+                                }
+
+                                var friend = db.Friends.FirstOrDefault(x => x.OwnerId == authData.UserId && x.FriendId == user.Id);
+
+                                if (friend == null)
+                                    db.Friends.Add(new FriendModel()
+                                    {
+                                        FriendId = user.Id,
+                                        OwnerId = authData.UserId
+                                    });
                             }
-
-                            var friend = db.Friends.FirstOrDefault(x => x.OwnerId == authData.UserId && x.FriendId == user.Id);
-
-                            if (friend == null)
-                                db.Friends.Add(new FriendModel() 
-                                {
-                                    FriendId = user.Id,
-                                    OwnerId = authData.UserId
-                                });
-                        }
-                        else
-                        {
-                            if (offlineFriend == null)
+                            else
                             {
-                                var avatarUrl = item?["photo_200_orig"]?.GetValue<string>();
-                                var newFriend = new OfflineFriendModel()
+                                if (offlineFriend == null)
                                 {
-                                    Firstname = item?["first_name"]?.GetValue<string>() ?? string.Empty,
-                                    Lastname = item?["last_name"]?.GetValue<string>() ?? string.Empty,
-                                    VkId = vkId,
-                                    OwnerId = authData.UserId,
-                                    HasAvatar = avatarUrl != null
-                                };
-                                db.OfflineFriends.Add(newFriend);
-                                await db.SaveChangesAsync();
-                                if (avatarUrl != null)
-                                {
-                                    using var stream = new MemoryStream(await client.GetByteArrayAsync(avatarUrl));
-                                    await _avatarService.SaveFriendAvatarAsync(stream, newFriend.Id);
+                                    var avatarUrl = item?["photo_200_orig"]?.GetValue<string>();
+                                    var newFriend = new OfflineFriendModel()
+                                    {
+                                        Firstname = item?["first_name"]?.GetValue<string>() ?? string.Empty,
+                                        Lastname = item?["last_name"]?.GetValue<string>() ?? string.Empty,
+                                        VkId = vkId,
+                                        OwnerId = authData.UserId,
+                                        HasAvatar = avatarUrl != null
+                                    };
+                                    db.OfflineFriends.Add(newFriend);
+                                    await db.SaveChangesAsync();
+                                    if (avatarUrl != null)
+                                    {
+                                        using var stream = new MemoryStream(await client.GetByteArrayAsync(avatarUrl));
+                                        await _avatarService.SaveFriendAvatarAsync(stream, newFriend.Id);
+                                    }
                                 }
                             }
                         }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"Не удалось добавить друга: {ex.GetType().Name} {ex.Message} {ex.InnerException?.GetType()?.Name ?? ""} {ex.InnerException?.Message ?? ""}");
+                        }
+
                     }
                     await db.SaveChangesAsync();
                 }

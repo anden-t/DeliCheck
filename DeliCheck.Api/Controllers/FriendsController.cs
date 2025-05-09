@@ -345,7 +345,7 @@ namespace DeliCheck.Controllers
                 }
             }
 
-            list = list.OrderByDescending(x => $"{x.Firstname} {x.Lastname}").ToList();
+            list = list.OrderBy(x => $"{x.Firstname} {x.Lastname}").ToList();
             return list;
         }
     }

@@ -71,7 +71,7 @@ namespace DeliCheck.Services
                 aesGcm.Decrypt(iv, content, tag, plainText);
 
                 var text = Encoding.UTF8.GetString(plainText);
-
+                Console.WriteLine(text);
                 var json = JsonNode.Parse(text);
 
                 var result = new InvoiceModel()
@@ -100,14 +100,11 @@ namespace DeliCheck.Services
 
         public static string CreateMD5(string input)
         {
-            // Use input string to calculate MD5 hash
-            using (MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                byte[] inputBytes = Encoding.ASCII.GetBytes(input);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
+            using MD5 md5 = MD5.Create();
+            byte[] inputBytes = Encoding.ASCII.GetBytes(input);
+            byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-                return Convert.ToHexString(hashBytes).ToLower(); // .NET 5 +
-            }
+            return Convert.ToHexString(hashBytes).ToLower();
         }
     }
 }
