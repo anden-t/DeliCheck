@@ -1,0 +1,22 @@
+﻿@using DeliCheck.Schemas
+@using DeliCheck.Web.Models
+
+@inject DialogService _dialogService
+@inject NotificationService _notify
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-1">
+    <RadzenButton class="my-button rz-mb-1" Text="Выберу все позиции сам" Click="@ByOwner" Image="/images/account-details.svg" />
+    <RadzenButton class="my-button" Text="Друзья сами выберут свои позиции" Click="@ByMembers" Image="/images/account-group.svg" />
+</RadzenStack>
+
+@code {
+    private void ByOwner()
+    {
+        _dialogService.Close(new SplitTypeDialogResult() { Type = InvoiceSplitType.ByOwner });
+    }
+
+    private void ByMembers()
+    {
+        _dialogService.Close(new SplitTypeDialogResult() { Type = InvoiceSplitType.ByMembers });
+    }
+}

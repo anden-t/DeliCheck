@@ -18,7 +18,7 @@ namespace DeliCheck.Schemas.Requests
         /// Количество в позиции, которое принаджежит пользователю
         /// </summary>
         [Required]
-        [JsonPropertyName("count")]
-        public decimal Count { get; set; }
+        [JsonPropertyName("quantity")]
+        public decimal Quantity { get; set; }
     }
 }

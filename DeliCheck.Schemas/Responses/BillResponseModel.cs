@@ -44,30 +44,14 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("payed")]
         public bool Payed { get; set; }
         /// <summary>
-        /// Имя пользователя, которому принадлежит счет
+        /// Пользователь, которому принадлежит счет
         /// </summary>
-        [JsonPropertyName("owner_firstname")]
-        public string OwnerFirstname { get; set; }
+        [JsonPropertyName("owner")]
+        public FriendResponseModel Owner { get; set; }
         /// <summary>
-        /// Фамилия пользователя, которому принадлежит счет
-        /// </summary>
-        [JsonPropertyName("owner_lastname")]
-        public string OwnerLastname { get; set; }
-        /// <summary>
-        /// Имя пользователя, которому принадлежит счет
+        /// Пользователь, которому принадлежит чек
         /// </summary>
         [JsonPropertyName("invoice_owner_firstname")]
-        public string InvoiceOwnerFirstname { get; set; }
-        /// <summary>
-        /// Фамилия пользователя, которому принадлежит счет
-        /// </summary>
-        [JsonPropertyName("invoice_owner_lastname")]
-        public string InvoiceOwnerLastname { get; set; }
-
-        [JsonPropertyName("owner_avatar_url")]
-        public string OwnerAvatarUrl { get; set; }
-
-        [JsonPropertyName("invoice_owner_avatar_url")]
-        public string InvoiceOwnerAvatarUrl { get; set; }
+        public FriendResponseModel InvoiceOwner { get; set; }
     }
 }

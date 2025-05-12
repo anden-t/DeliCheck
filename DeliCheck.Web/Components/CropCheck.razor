@@ -22,7 +22,7 @@
 
 @code {
     private const string types = "image/jpeg,image/png";
-    private const long maxSize = 10485760;
+    private const long maxSize = 5 * 1024 * 1024;
 
     private string _cropSrc = "https://api.deli-check.ru/avatars/default";
     private string _displayCropper = "none";
@@ -53,7 +53,7 @@
         if (file.Size > maxSize || !types.Contains(file.ContentType))
         {
             if (file.Size > maxSize)
-                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Файл должен весить не более 10 МБ", Detail = "Попробуйте еще раз", Duration = 4000 });
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Файл должен весить не более 5 МБ", Detail = "Попробуйте еще раз", Duration = 4000 });
 
             if (!types.Contains(file.ContentType))
                 _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Поддерживаются форматы только .jpg/.jpeg и .png", Detail = "Попробуйте еще раз", Duration = 4000 });

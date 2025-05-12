@@ -79,7 +79,7 @@ namespace DeliCheck.Services
                     return new InvoiceItemModel()
                     {
                         Cost = cost,
-                        Count = count,
+                        Quantity = count,
                         Name = name,
                     };
                 }
@@ -92,7 +92,7 @@ namespace DeliCheck.Services
             else if (totalCost > itemsSum) items.Add(new InvoiceItemModel()
             {
                 Cost = totalCost - itemsSum,
-                Count = 1,
+                Quantity = 1,
                 Name = "Позиция"
             });  
 

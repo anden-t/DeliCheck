@@ -55,7 +55,7 @@
                 Data="@bill.ItemsQueryable" TItem="BillItemResponseModel" IsLoading="@_isLoading">
                     <Columns>
                         <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Name)" Title="Название" Frozen="false" />
-                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Count)" Title="Кол-во" Frozen="false" />
+                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Quantity)" Title="Кол-во" Frozen="false" />
                         <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Cost)" FormatString="{0} ₽" Title="Цена" Frozen="false" />
                     </Columns>
                 </RadzenDataGrid>
@@ -119,7 +119,7 @@
         }
 
         _items = _invoice.Items.FromList().AsQueryable();
-        _bills = (await _client.GetBills(_invoice.Id)).FromList().AsQueryable();
+        _bills = (await _client.GetBills(_invoice.Id)).Bills.FromList().AsQueryable();
 
         _textPayed = $"Чек оплатил {_bills.First().InvoiceOwnerFirstname} {_bills.First().InvoiceOwnerLastname}";
         _textTotal = $"Итого: {_invoice.TotalCost} ₽";

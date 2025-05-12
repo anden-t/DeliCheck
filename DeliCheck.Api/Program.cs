@@ -1,5 +1,6 @@
 
 using DeliCheck;
+using DeliCheck.Api.Hubs;
 using DeliCheck.Api.Services.Implementaions;
 using DeliCheck.Services;
 using DeliCheck.Utils;
@@ -48,6 +49,10 @@ builder.Services.AddSwaggerGen(c =>
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
 });
+builder.Services.AddSignalR(options => 
+{
+    options.ClientTimeoutInterval = new TimeSpan(0, 0, 30);
+});
 builder.WebHost.UseKestrel(options =>
 {
     options.Listen(IPAddress.Parse(builder.Configuration["BindIP"]), 443, listenOptions =>
@@ -61,7 +66,7 @@ var app = builder.Build();
 //if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
-
+app.MapHub<SplittingBillsHub>("/bills-hub");
 app.UseCors(builder => builder
          .SetIsOriginAllowed(callerHost
                 => true//callerHost.Contains("http://localhost:5208") || 

@@ -1,9 +1,14 @@
-﻿namespace DeliCheck.Schemas.Requests
+﻿using System.Text.Json.Serialization;
+
+namespace DeliCheck.Schemas.Requests
 {
     public class InvoiceEditItem
     {
+        [JsonPropertyName("name")]
         public string Name { get; set; }
-        public decimal Count { get; set; }
+        [JsonPropertyName("quantity")]
+        public decimal Quantity { get; set; }
+        [JsonPropertyName("cost")]
         public decimal Cost { get; set; }
     }
 }

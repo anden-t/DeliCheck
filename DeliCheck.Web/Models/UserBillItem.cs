@@ -71,16 +71,16 @@ namespace DeliCheck.Web.Models
             {
                 Id = bill.Id,
                 InvoiceId = bill.InvoiceId,
-                InvoiceOwnerFirstname = bill.InvoiceOwnerFirstname,
-                InvoiceOwnerLastname = bill.InvoiceOwnerLastname,
+                InvoiceOwnerFirstname = bill.InvoiceOwner.Firstname,
+                InvoiceOwnerLastname = bill.InvoiceOwner.Lastname,
                 Items = bill.Items,
                 OwnerId = bill.OwnerId,
                 OfflineOwner = bill.OfflineOwner,
-                OwnerFirstname = bill.OwnerFirstname,
-                OwnerLastname = bill.OwnerLastname,
+                OwnerFirstname = bill.Owner.Firstname,
+                OwnerLastname = bill.Owner.Lastname,
                 Payed = bill.Payed,
                 TotalCost = bill.TotalCost,
-                OwnerAvatarUrl = bill.OwnerAvatarUrl,
+                OwnerAvatarUrl = bill.Owner.AvatarUrl,
                 ItemsQueryable = bill.Items.AsQueryable()
             };
         }

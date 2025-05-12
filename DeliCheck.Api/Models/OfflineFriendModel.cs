@@ -25,7 +25,6 @@
         /// Идентификатор пользователя в ВК
         /// </summary>
         public long? VkId { get; set; }
-
         /// <summary>
         /// Есть ли аватар у друга
         /// </summary>

@@ -1,6 +1,7 @@
 ﻿using DeliCheck.Schemas.Requests;
 using DeliCheck.Schemas.Responses;
 using DeliCheck.Services;
+using DeliCheck.Utils;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
@@ -47,22 +48,7 @@ namespace DeliCheck.Controllers
                 var user = db.Users.FirstOrDefault(x => x.Id == userId);
                 if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
-                bool self = user.Id == token.UserId;
-
-                var response = new ProfileResponseModel()
-                {
-                    Email = self ? user.Email : string.Empty,
-                    Firstname = user.Firstname,
-                    Lastname = user.Lastname,
-                    PhoneNumber = self ? user.PhoneNumber : string.Empty,
-                    Username = user.Username,
-                    HasAvatar = user.HasAvatar,
-                    VkId = user.VkId,
-                    Self = self,
-                    Id = user.Id
-                };
-
-                return Ok(new ProfileResponse(response));
+                return Ok(new ProfileResponse(user.ToProfileResponseModel()));
             }
         }
 

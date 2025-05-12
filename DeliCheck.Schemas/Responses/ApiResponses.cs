@@ -58,10 +58,10 @@ namespace DeliCheck.Schemas.Responses
         public ApiResponse(T response) : base() { Response = response; }
     }
 
-    public class BillsListResponse : ApiResponse<List<BillResponseModel>> 
+    public class BillsListResponse : ApiResponse<BillsListResponseModel> 
     {
         public BillsListResponse() { }
-        public BillsListResponse(List<BillResponseModel> response) : base(response) { }
+        public BillsListResponse(BillsListResponseModel response) : base(response) { }
     }
     public class FriendsListResponse : ApiResponse<FriendsListResponseModel>
     {

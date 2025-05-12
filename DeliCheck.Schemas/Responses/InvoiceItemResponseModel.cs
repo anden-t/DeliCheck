@@ -20,12 +20,17 @@ namespace DeliCheck.Schemas.Responses
         /// <summary>
         /// Количество в позиции
         /// </summary>
-        [JsonPropertyName("count")]
-        public decimal Count { get; set; }
+        [JsonPropertyName("quantity")]
+        public decimal Quantity { get; set; }
         /// <summary>
         /// Стоимость всей позиции (всего количества)
         /// </summary>
         [JsonPropertyName("cost")]
         public decimal Cost { get; set; }
+        /// <summary>
+        /// Тип количества (отображаемый)
+        /// </summary>
+        [JsonPropertyName("quantity_measure")]
+        public ItemQuantityMeasure QuantityMeasure { get; set; }
     }
 }

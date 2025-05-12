@@ -3,6 +3,7 @@
 @using DeliCheck.Web.Models
 @using Blazorise.LottieAnimation
 
+
 @inject DeliCheckClient _client
 @inject DialogService _dialog
 @inject NotificationService _notify
@@ -24,7 +25,8 @@
         style="aspect-ratio: 1; width: 100%; max-width: 200px; margin-inline: auto; margin-bottom: 1rem;"></LottieAnimation>
 
         <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-1">
-            <RadzenButton class="my-button" @bind-IsBusy=@_isBusy BusyText="Распознаем позиции..." Text="Загрузить чек" Click="@OpenFileUpload"></RadzenButton>
+            <RadzenButton class="my-button rz-mb-1" @bind-IsBusy=@_isBusyOcr BusyText="Распознаем позиции..." Text="Загрузить чек" Click="@OpenFileUpload" Image="/images/camera.svg" />
+            <RadzenButton class="my-button" @bind-IsBusy=@_isBusyQr BusyText="Распознаем позиции..." Text="Сканировать QR-код" Click="@QrCodeScanningStart" Image="/images/qrcode-scan.svg"/>
         </RadzenStack>
 
         <RadzenText TextAlign="TextAlign.Center" class="rz-mb-0" style="font-style: italic; font-size: 0.7rem">На фото чек должен быть расположен ровно, а все позиции должны быть читаемы</RadzenText>
@@ -38,11 +40,74 @@
 
 
 @code {
-    bool _isBusy;
+
+    bool _isBusyOcr;
+    bool _isBusyQr;
+    bool _disabledQr;
+    bool _disabledOcr;
     bool _animPaused = true;
+
+    public async void QrCodeScanningStart()
+    {
+        var type = await _dialog.OpenAsync<SplitTypeDialog>("Выберите тип деления чека",
+            options: new DialogOptions()
+                {
+                    Resizable = false,
+                    Draggable = true,
+                }) as SplitTypeDialogResult;
+
+        if (type == null)
+            return;
+
+        var res = await _dialog.OpenAsync<QrCodeDialog>($"Отсканируйте QR-код",
+               options: new DialogOptions()
+                   {
+                       Resizable = false,
+                       Draggable = true,
+                   }) as string;
+
+        if (res == null)
+            return;
+
+        _disabledOcr = true;
+        _isBusyQr = true;
+        _animPaused = false;
+        await InvokeAsync(() => StateHasChanged());
+
+        try
+        {
+            var invoice = await _client.InvoiceQr(res, type.Type);
+            _nav.NavigateTo($"/deli?id={invoice.Id}");
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _disabledOcr = false;
+            _isBusyOcr = false;
+            _animPaused = true;
+            await InvokeAsync(() => StateHasChanged());
+        }
+    }
+
+    private string BarcodeText;
+
+    
 
     public async void OpenFileUpload()
     {
+        var type = await _dialog.OpenAsync<SplitTypeDialog>("Выберите тип деления чека",
+            options: new DialogOptions()
+                {
+                    Resizable = false,
+                    Draggable = true,
+                }) as SplitTypeDialogResult;
+
+        if (type == null)
+            return;
+
         var res = await _dialog.OpenAsync<CropCheck>($"Выберите изображение",
                options: new DialogOptions()
                    {
@@ -53,13 +118,14 @@
         if (res == null)
             return;
 
-        _isBusy = true;
+        _disabledQr = true;
+        _isBusyOcr = true;
         _animPaused = false;
         await InvokeAsync(() => StateHasChanged());
 
         try
         {
-            var invoice = await _client.InvoiceOcr(res);
+            var invoice = await _client.InvoiceOcr(res, type.Type);
             _nav.NavigateTo($"/deli?id={invoice.Id}");
         }
         catch (ApiException ex)
@@ -68,7 +134,8 @@
         }
         finally
         {
-            _isBusy = false;
+            _disabledOcr = true;
+            _isBusyOcr = false;
             _animPaused = true;
             await InvokeAsync(() => StateHasChanged());
         }

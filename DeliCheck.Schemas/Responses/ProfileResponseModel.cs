@@ -33,11 +33,6 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("has_avatar")]
         public bool HasAvatar { get; set; }
         /// <summary>
-        /// Показывает, свой ли это профиль. Если свой true, иначе false
-        /// </summary>
-        [JsonPropertyName("self")]
-        public bool Self { get; set; }
-        /// <summary>
         /// Эл. почта.
         /// </summary>
         [JsonPropertyName("email")]
@@ -52,7 +47,10 @@ namespace DeliCheck.Schemas.Responses
         /// </summary>
         [JsonPropertyName("vk_id")]
         public long? VkId { get; set; }
-
-        public string AvatarUrl => $"https://api.deli-check.ru/avatars/user?userId={Id}";
+        /// <summary>
+        /// URL аватарки
+        /// </summary>
+        [JsonPropertyName("avatar_url")]
+        public string AvatarUrl { get; set; }
     }
 }

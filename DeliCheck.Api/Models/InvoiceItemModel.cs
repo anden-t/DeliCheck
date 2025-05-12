@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using DeliCheck.Schemas;
+using System.Text.Json.Serialization;
 
 namespace DeliCheck.Models
 {
@@ -18,7 +19,7 @@ namespace DeliCheck.Models
         /// <summary>
         /// Количество в позиции
         /// </summary>
-        public decimal Count { get; set; }
+        public decimal Quantity { get; set; }
         /// <summary>
         /// Стоимость всей позиции (всего количества)
         /// </summary>
@@ -27,5 +28,9 @@ namespace DeliCheck.Models
         /// Идентификатор чека
         /// </summary>
         public int InvoiceId { get; set; }
+        /// <summary>
+        /// Тип количества (отображаемый)
+        /// </summary>
+        public ItemQuantityMeasure QuantityMeasure { get; set; }
     }
 }

@@ -574,47 +574,31 @@
         int cost = _items.Sum(x => x.Cost);
 
         var val = await _dialog.OpenAsync<DiscountDialog>($"Введите величину скидки",
-       new Dictionary<string, object>()
-           {
-               ["Cost"] = cost
-           },
-       new DialogOptions()
-           {
-               Resizable = false,
-               Draggable = true,
-           })
-       ;
+           new Dictionary<string, object>()
+               {
+                   ["Cost"] = cost
+               },
+           new DialogOptions()
+               {
+                   Resizable = false,
+                   Draggable = true,
+               });
 
         if (val == null)
             return;
 
-        var discount = ((int)val / 100m) * cost;
+        //var discount = ((int)val / 100m) * cost;
 
-        
         _discount = true;
         await InvokeAsync(() => StateHasChanged());
 
         try
         {
-            var item = new InvoiceItem()
-                {
-                    Name = "Скидка",
-                    Cost = (int)Math.Round(discount * -1),
-                    Count = 1,
-                    UsersParts = new Dictionary<Friend, int>()
-                };
-
-            foreach (var user in _selected)
+            foreach(var item in _items)
             {
-                item.UsersParts.Add(user, 1);
+                item.EditedCost = item.Cost - (int)Math.Round(((int)val / 100m) * item.Cost);
+                await SaveCost(item);
             }
-
-            var res = await _client.AddInvoiceItem(_invoice.Id, item);
-
-            item.Id = res.Id;
-            var newItems = _items.ToList();
-            newItems.Add(item);
-            _items = newItems.AsQueryable();
         }
         catch (ApiException ex)
         {
@@ -660,12 +644,13 @@
                         userPart = item.UsersParts[user];
                     }
 
-                    bill.Items.Add(new Schemas.Requests.UserBillItem() { ItemId = item.Id, Count = userPart });
+                    bill.Items.Add(new Schemas.Requests.UserBillItem() { ItemId = item.Id, Quantity = userPart });
                 }
 
                 bills.Add(bill);
             }
 
+            await _client.FinishInvoiceEditing(_invoice.Id);
             await _client.CreateBills(_invoice.Id, bills);
         }
         catch (ApiException ex)

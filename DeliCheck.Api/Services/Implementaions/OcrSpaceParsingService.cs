@@ -13,14 +13,16 @@ namespace DeliCheck.Api.Services.Implementaions
         private const string _regexPatternTotal = @"(.*?)\s+([-=]?(\d+\s+)\d+(\.|,)\d\d)([^\d]*?)$";
 
         /// <summary>
-        /// Паттерн для вида "Наименование | Количество | Сумма". Поддерживает перенос части названия на строку ниже или выше.
+        /// Паттерн для вида "Наименование | Количество | Сумма". Поддерживает перенос части названия на строку ниже или выше. 
         /// </summary>
         //private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
-        private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d\n]*)(\1)?(?(8)\n([А-Яа-яa-zA-Z\d ]*)\n|$)";
+        //private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d\n]*)(\1)?(?(8)\n([А-Яа-яa-zA-Z\d ]*)\n|$)";
+        private const string _regexPattern1 = @"(.*?)(?:\r\n?|\n)?(.*?)[*^'""#`хХxX\s]+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?[=\s]+([-]?(\d+\s)?\d+\s?(\.|,)\s?\d\d)([^\d\n\r]*?)(\1)?(?(8)(?:\r\n?|\n)([А-Яа-яa-zA-Z\d ]*)(?:\r\n?|\n)|(?:\r\n?|\n))";
         /// <summary>
         /// Паттерн для вида "Наименование | Количество * Стоимость | Сумма". Поддерживает перенос части названия на строку выше
         /// </summary>
-        private const string _regexPattern2 = @"(.*?)\n?(.*?)\s+(\d+[\.,]?\d*)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s*?[*^'""#`хХxX]?\s*?((\d+\s)?\d+(\.|,)\d\d)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
+        private const string _regexPattern2 = @"(.*?)(?:\r\n?|\n)?(.*?)\s+(\d+[\.,]?\d*)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?[*^'""#`хХxX ]+((\d+\s)?\d+(\.|,)\d\d)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
+        //private const string _regexPattern2 = @"(.*?)(?:\r\n?|\n)?(.*?)\s+(\d+[\.,]?\d*)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s*?[*^'""#`хХxX]?\s*?((\d+\s)?\d+(\.|,)\d\d)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
         /// <summary>
         /// Паттерн для вида "Количество * Наименование | Сумма"
         /// </summary>
@@ -49,11 +51,7 @@ namespace DeliCheck.Api.Services.Implementaions
         {
             text = text.Trim().Replace("=", "").Replace(")", "").Replace("(", "").Replace("\t", "    ").Replace(" пор ", "  ");
             text = Regex.Replace(text, @"НДС \d+%", " ");
-
-            if (text.Contains("\r"))
-                text = text.Replace("\r\n\r\n", "\r\n");
-            else
-                text = text.Replace("\n\n", "\n");
+            text += "\r\n";
 
             Console.WriteLine(text);
 
@@ -69,11 +67,16 @@ namespace DeliCheck.Api.Services.Implementaions
             }).LastOrDefault();
 
             List<InvoiceItemModel> items;
+
             var itemsPattern1 = Regex.Matches(text, _regexPattern1, RegexOptions.Multiline).Cast<Match>().Select(Pattern1Selector).Where(x => x != null).ToList();
             var itemsPattern2 = Regex.Matches(text, _regexPattern2, RegexOptions.Multiline).Cast<Match>().Select(Pattern2Selector).Where(x => x != null).ToList();
             var itemsPattern3 = Regex.Matches(text, _regexPattern3, RegexOptions.Multiline).Cast<Match>().Select(Pattern3Selector).Where(x => x != null).ToList();
 
-            if (itemsPattern2.Count > 1) items = itemsPattern2;
+            Console.WriteLine($"Pattern 1: {itemsPattern1.Count} matches");
+            Console.WriteLine($"Pattern 2: {itemsPattern2.Count} matches");
+            Console.WriteLine($"Pattern 3: {itemsPattern3.Count} matches");
+
+            if (itemsPattern2.Count > 1 && !itemsPattern2.Any(x => x.Cost == 1)) items = itemsPattern2;
             else if (itemsPattern3.Count > 1) items = itemsPattern3;
             else items = itemsPattern1;
 
@@ -105,12 +108,14 @@ namespace DeliCheck.Api.Services.Implementaions
                 )
             {
                 if ((cost != 1 && count == cost) || count == 0) count = 1;
+                if (cost % count == 0 && count * 5 >= cost) count = cost / count;
 
                 string name = "";
                 if (string.IsNullOrWhiteSpace(name1))
                 {
                     name = name2;
-                    if (!string.IsNullOrWhiteSpace(name3))
+
+                    if (!string.IsNullOrWhiteSpace(name3) && !name3Lower.All(_excludeChars.Contains))
                         name += name3;
                 }
                 else if (!string.IsNullOrWhiteSpace(name2))
@@ -121,6 +126,9 @@ namespace DeliCheck.Api.Services.Implementaions
                         name = name1;
                     else
                         name = name1 + " " + name2;
+
+                    if (!string.IsNullOrWhiteSpace(name3) && !name3Lower.All(_excludeChars.Contains))
+                        name += name3;
                 }
                 else
                 {
@@ -132,7 +140,7 @@ namespace DeliCheck.Api.Services.Implementaions
                 return new InvoiceItemModel()
                 {
                     Cost = cost,
-                    Count = count,
+                    Quantity = count,
                     Name = name,
                 };
             }
@@ -147,6 +155,7 @@ namespace DeliCheck.Api.Services.Implementaions
             var name2Lower = name2.ToLower();
 
             var countString = x.Groups[3].Value.Trim().Replace(" ", "").Replace(",", ".");
+            var oneCostString = x.Groups[4].Value.Trim().Replace(" ", "").Replace(",", ".");
             var costString = x.Groups[7].Value.Trim().Replace(" ", "").Replace(",", ".").Replace("-", "");
 
             if (
@@ -155,10 +164,12 @@ namespace DeliCheck.Api.Services.Implementaions
                 !_excludeItems.Any(name1Lower.Contains) &&
                 !_excludeItems.Any(name2Lower.Contains) &&
                 (!string.IsNullOrWhiteSpace(countString) ? decimal.TryParse(countString, CultureInfo.InvariantCulture, out decimal count) : (count = 1) == 1) &&
-                decimal.TryParse(costString, CultureInfo.InvariantCulture, out decimal cost)
+                decimal.TryParse(costString, CultureInfo.InvariantCulture, out decimal cost) &&
+                decimal.TryParse(oneCostString, CultureInfo.InvariantCulture, out decimal oneCost)
                 )
             {
                 if ((cost != 1 && count == cost) || count == 0) count = 1;
+                if (cost > 30 && oneCost < 15) return null;
 
                 string name = "";
                 if (string.IsNullOrWhiteSpace(name1))
@@ -184,7 +195,7 @@ namespace DeliCheck.Api.Services.Implementaions
                 return new InvoiceItemModel()
                 {
                     Cost = cost,
-                    Count = count,
+                    Quantity = count,
                     Name = name,
                 };
             }
@@ -207,7 +218,7 @@ namespace DeliCheck.Api.Services.Implementaions
                 return new InvoiceItemModel()
                 {
                     Cost = cost,
-                    Count = count,
+                    Quantity = count,
                     Name = name,
                 };
             }

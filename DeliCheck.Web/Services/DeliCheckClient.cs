@@ -1,13 +1,11 @@
 ﻿using Blazored.LocalStorage;
+using DeliCheck.Schemas;
 using DeliCheck.Schemas.Requests;
 using DeliCheck.Schemas.Responses;
 using DeliCheck.Web.Exceptions;
 using DeliCheck.Web.Models;
-using Radzen;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
-using System.Threading.Tasks;
 using System.Web;
 
 namespace DeliCheck.Web.Services
@@ -28,8 +26,6 @@ namespace DeliCheck.Web.Services
             _localStorage = localStorage;
             _alert = alert;
         }
-
-
 
         private async Task<T> ExecuteRequest<T>(HttpMethod method, string url, HttpContent? content, bool needAuth) where T : class
         {
@@ -94,9 +90,6 @@ namespace DeliCheck.Web.Services
         private async Task PostJson(string url, object obj, bool needAuth) => await ExecuteRequest<ApiResponse>(HttpMethod.Post, url, obj, needAuth);
         private async Task<T> GetJson<T>(string url, bool needAuth) where T : class => await SendJson<T>(HttpMethod.Get, url, null, needAuth);
         private async Task GetJson(string url, bool needAuth) => await ExecuteRequest<ApiResponse>(HttpMethod.Get, url, null, needAuth);
-
-
-
         public async Task<bool> IsAuthenticated()
         {
             var token = await _localStorage.GetItemAsync<AuthToken>("token");
@@ -121,7 +114,6 @@ namespace DeliCheck.Web.Services
 
             return await PostJson<LoginResponseModel>("/auth/register", body, false);
         }
-
         public async Task<LoginResponseModel> RegisterAsGuest(string firstname, string lastname)
         {
             var body = new RegisterGuestRequest()
@@ -132,7 +124,6 @@ namespace DeliCheck.Web.Services
 
             return await PostJson<LoginResponseModel>("/auth/register-guest", body, false);
         }
-
         public async Task<LoginResponseModel> Login(string username, string password)
         {
             var body = new LoginRequest() { Username = username, Password = password };
@@ -155,20 +146,9 @@ namespace DeliCheck.Web.Services
             await _alert.InvokeAuthStatusChanged(true);
         }
 
-
-
-        public async Task<FriendsListResponseModel> SearchFriends(string query)
-        {
-            return await GetJson<FriendsListResponseModel>($"/friends/search?query={HttpUtility.UrlEncode(query)}", true);
-        }
-
-        public async Task<ProfileResponseModel> GetProfile(int? userid = null)
-        {
-            return await GetJson<ProfileResponseModel>($"/profile/get?userId={userid}", true);
-        }
-
+        public async Task<FriendsListResponseModel> SearchFriends(string query) => await GetJson<FriendsListResponseModel>($"/friends/search?query={HttpUtility.UrlEncode(query)}", true);
+        public async Task<ProfileResponseModel> GetProfile(int? userid = null) => await GetJson<ProfileResponseModel>($"/profile/get?userId={userid}", true);
         public async Task EditProfile(ProfileEditRequest profile) => await PostJson("/profile/edit", profile, true);
-
         public async Task EditProfile(string firstname, string lastname, string email, string phoneNumber, string username)
         {
             var body = new ProfileEditRequest()
@@ -182,7 +162,6 @@ namespace DeliCheck.Web.Services
 
             await EditProfile(body);
         }
-
         public async Task SetAvatar(string base64)
         {
             if (base64.Contains(","))
@@ -190,7 +169,6 @@ namespace DeliCheck.Web.Services
 
             await PostJson("/profile/set-avatar-json", new SetAvatarRequest() { AvatarBase64 = base64 }, true);
         }
-
 
         public async Task AddOnlineFriend(int userId) => await GetJson($"/friends/add?userId={userId}", true);
         public async Task AddOfflineFriend(string firstname, string lastname)
@@ -203,29 +181,36 @@ namespace DeliCheck.Web.Services
         public async Task RemoveOfflineFriend(int friendLabelId) => await GetJson($"/friends/remove-offline?friendLabelId={friendLabelId}", true);
         public async Task RemoveOnlineFriend(int userId) => await GetJson($"/friends/remove?userId={userId}", true);
 
-
-        public async Task<InvoiceResponseModel> InvoiceOcr(CropCheckResult crop)
+        public async Task<InvoiceResponseModel> InvoiceOcr(CropCheckResult crop, InvoiceSplitType splitType)
         {
             var content = new MultipartFormDataContent
             {
                 { new ByteArrayContent(crop.ImageData), "file", "photo.jpg" }
             };
 
-            return (await ExecuteRequest<InvoiceResponse>(HttpMethod.Post, $"/invoices/ocr?x1={crop.X1}&x2={crop.X2}&y1={crop.Y1}&y2={crop.Y2}", content, true)).Response;
+            return (await ExecuteRequest<InvoiceResponse>(HttpMethod.Post, $"/invoices/ocr?x1={crop.X1}&x2={crop.X2}&y1={crop.Y1}&y2={crop.Y2}&split={(int)splitType}", content, true)).Response;
         }
+        public async Task<InvoiceResponseModel> InvoiceQr(string qrcode, InvoiceSplitType splitType)
+        {
+            var body = new QrFnsRequest()
+            {
+                QrCodeText = qrcode
+            };
 
-        public async Task<InvoiceResponseModel> EditInvoice(int invoiceId, List<InvoiceEditItem> items)
+            return await PostJson<InvoiceResponseModel>($"/invoices/qr?split={(int)splitType}", body, true);
+        }
+        public async Task<InvoiceResponseModel> GetInvoice(int id) => await GetJson<InvoiceResponseModel>($"/invoices/get?invoiceId={id}", false);
+        public async Task<InvoiceResponseModel> EditInvoice(int invoiceId, string name, List<InvoiceEditItem>? items = null)
         {
             var body = new InvoiceEditRequest()
             {
                 Id = invoiceId,
-                Name = "Чек",
+                Name = name,
                 Items = items
             };
 
             return await PostJson<InvoiceResponseModel>("/invoices/edit", body, true);
         }
-
         public async Task EditInvoiceItem(InvoiceItem item)
         {
             var body = new EditInvoiceItemRequest()
@@ -236,9 +221,9 @@ namespace DeliCheck.Web.Services
                 Count = item.Count
             };
 
-            await PostJson("/invoices/edit-invoice-item", body, true);
+            await PostJson("/invoices/edit-item", body, true);
         }
-
+        public async Task RemoveInvoiceItem(InvoiceItem item) => await GetJson($"/invoices/remove-item?invoiceItemId={item.Id}", true);
         public async Task<InvoiceItemResponseModel> AddInvoiceItem(int invoiceId, InvoiceItem item)
         {
             var body = new AddInvoiceItemRequest()
@@ -249,13 +234,11 @@ namespace DeliCheck.Web.Services
                 Count = item.Count
             };
 
-            return await PostJson<InvoiceItemResponseModel>("/invoices/add-invoice-item", body, true);
+            return await PostJson<InvoiceItemResponseModel>("/invoices/add-item", body, true);
         }
+        public async Task<InvoicesListResponseModel> ListMyInvoices() => await GetJson<InvoicesListResponseModel>("/invoices/list", true);
 
-        public async Task RemoveInvoiceItem(InvoiceItem item) => await GetJson($"/invoices/remove-invoice-item?invoiceItemId={item.Id}", true);
-        
-        public async Task<InvoiceResponseModel> GetInvoice(int id) => await GetJson<InvoiceResponseModel>($"/invoices/get?invoiceId={id}", false);
-
+        public async Task FinishInvoiceEditing(int invoiceId) => await GetJson($"/invoices/finish-editing?invoiceId={invoiceId}", true);
         public async Task CreateBills(int invoiceId, List<UserBill> bills)
         {
             var body = new CreateBillsRequest()
@@ -264,14 +247,16 @@ namespace DeliCheck.Web.Services
                 Bills = bills
             };
 
-            await PostJson("/invoices/create-bills", body, true);
+            await PostJson("/bills/create", body, true);
         }
-
-        public async Task<List<BillResponseModel>> GetBills(int invoiceId) => await GetJson<List<BillResponseModel>>($"/invoices/get-bills?invoiceId={invoiceId}", false);
+        public async Task<BillsListResponseModel> GetBills(int invoiceId) => await GetJson<BillsListResponseModel>($"/bills/get?invoiceId={invoiceId}", false);
+        public async Task<BillsListResponseModel> ListMyBills(int invoiceId) => await GetJson<BillsListResponseModel>($"/bills/list", true);
 
         public async Task<VkAuthResponseModel> Vk() => await GetJson<VkAuthResponseModel>("/auth/vk", false);
+        public async Task<VkAuthResponseModel> VkConnect() => await GetJson<VkAuthResponseModel>("/auth/vk-connect", true);
         public async Task<LoginResponseModel> VkCallback(string code, string state, string deviceId) 
             => await GetJson<LoginResponseModel>($"/auth/vk-callback?code={HttpUtility.UrlEncode(code)}&state={HttpUtility.UrlEncode(state)}&device_id={HttpUtility.UrlEncode(deviceId)}", false);
-        public async Task<InvoicesListResponseModel> GetInvoices() => await GetJson<InvoicesListResponseModel>("/invoices/list", true);
+        public async Task VkConnectCallback(string code, string state, string deviceId)
+            => await GetJson($"/auth/vk-connect-callback?code={HttpUtility.UrlEncode(code)}&state={HttpUtility.UrlEncode(state)}&device_id={HttpUtility.UrlEncode(deviceId)}", true);
     }
 }

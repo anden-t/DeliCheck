@@ -5,53 +5,55 @@ namespace DeliCheck.Utils
 {
     public static class SchemasExtensions
     {
+        public static FriendResponseModel Deleted(IConfiguration configuration) => new FriendResponseModel()
+        {
+            AvatarUrl = $"https://{configuration["Domain"]}/avatars/default",
+            Firstname = "Deleted",
+            Lastname = "Deleted",
+            FriendLabelId = null,
+            UserId = null,
+            HasProfile = false,
+            HasAvatar = false,
+            HasVk = false,
+            VkId = null
+        };
+
         /// <summary>
         /// Получает информацию о счете по моделе
         /// </summary>
         /// <param name="model">Модель</param>
         /// <param name="db">База данных</param>
+        /// <param name="configuration">Конфигурация</param>
         /// <returns></returns>
         public static BillResponseModel ToResponseModel(this BillModel model, DatabaseContext db, IConfiguration configuration)
         {
-            string ownerFirstname, ownerLastname, invoiceOwnerFirstname, invoiceOwnerLastname;
+            FriendResponseModel? owner = null, invoiceOwner = null;
 
             var invoice = db.Invoices.FirstOrDefault(x => x.Id == model.InvoiceId);
             if (invoice != null)
-            {
-                var invoiceOwner = db.Users.FirstOrDefault(x => x.Id == invoice.OwnerId);
-                invoiceOwnerFirstname = invoiceOwner?.Firstname ?? string.Empty;
-                invoiceOwnerLastname = invoiceOwner?.Lastname ?? string.Empty;
-            }
-            else invoiceOwnerFirstname = invoiceOwnerLastname = string.Empty;
+                invoiceOwner = db.Users.FirstOrDefault(x => x.Id == invoice.OwnerId)?.ToFriendResponseModel(configuration);
 
             if (model.OfflineOwner)
-            {
-                var owner = db.OfflineFriends.FirstOrDefault(x => x.Id == model.OwnerId);
-                ownerFirstname = owner?.Firstname ?? string.Empty;
-                ownerLastname = owner?.Lastname ?? string.Empty;
-            }
+                owner = db.OfflineFriends.FirstOrDefault(x => x.Id == model.OwnerId)?.ToFriendResponseModel(configuration);
             else
-            {
-                var owner = db.Users.FirstOrDefault(x => x.Id == model.OwnerId);
-                ownerFirstname = owner?.Firstname ?? string.Empty;
-                ownerLastname = owner?.Lastname ?? string.Empty;
-            }
+                owner = db.Users.FirstOrDefault(x => x.Id == model.OwnerId)?.ToFriendResponseModel(configuration);
+
+            if (owner == null)
+                owner = Deleted(configuration);
+            if (invoiceOwner == null)
+                invoiceOwner = Deleted(configuration);
 
             return new BillResponseModel()
             {
                 Id = model.Id,
                 InvoiceId = model.InvoiceId,
-                Items = db.BillsItems.Where(x => x.BillId == model.Id).Select(x => new BillItemResponseModel() { Cost = x.Cost, Count = x.Count, Name = x.Name }).ToList(),
+                Items = db.BillsItems.Where(x => x.BillId == model.Id).Select(x => new BillItemResponseModel() { Cost = x.Cost, Quantity = x.Quantity, Name = x.Name }).ToList(),
                 OfflineOwner = model.OfflineOwner,
                 OwnerId = model.OwnerId,
                 Payed = model.Payed,
                 TotalCost = model.TotalCost,
-                OwnerFirstname = ownerFirstname,
-                OwnerLastname = ownerLastname,
-                InvoiceOwnerFirstname = invoiceOwnerFirstname,
-                InvoiceOwnerLastname = invoiceOwnerLastname,
-                OwnerAvatarUrl = model.OfflineOwner ? $"https://{configuration["Domain"]}/avatars/friend?friendLabelId={model.OwnerId}" : $"https://{configuration["Domain"]}/avatars/user?userId={model.OwnerId}",
-                InvoiceOwnerAvatarUrl = invoice != null ? $"https://{configuration["Domain"]}/avatars/user?userId={invoice.OwnerId}" : $"https://{configuration["Domain"]}/avatars/default"
+                Owner = owner,
+                InvoiceOwner = invoiceOwner
             };
         }
         /// <summary>
@@ -68,7 +70,7 @@ namespace DeliCheck.Utils
                 CreatedTime = model.CreatedTime,
                 Id = model.Id,
                 FromFns = model.FromFns,
-                Items = db.InvoicesItems.Where(x => x.InvoiceId == model.Id).Select(x => new InvoiceItemResponseModel() { Cost = x.Cost, Id = x.Id, Count = x.Count, Name = x.Name }).ToList(),
+                Items = db.InvoicesItems.Where(x => x.InvoiceId == model.Id).Select(x => new InvoiceItemResponseModel() { Cost = x.Cost, Id = x.Id, Quantity = x.Quantity, Name = x.Name }).ToList(),
                 Name = model.Name,
                 OCRText = model.OCRText,
                 TotalCost = model.TotalCost,
@@ -82,7 +84,7 @@ namespace DeliCheck.Utils
         /// <param name="model">Модель</param>
         /// <param name="self">Свой профиль или нет</param>
         /// <returns></returns>
-        public static ProfileResponseModel ToResponseModel(this UserModel model, bool self)
+        public static ProfileResponseModel ToProfileResponseModel(this UserModel model)
         {
             return new ProfileResponseModel()
             {
@@ -91,10 +93,53 @@ namespace DeliCheck.Utils
                 HasAvatar = model.HasAvatar,
                 Lastname = model.Lastname,
                 PhoneNumber = model.PhoneNumber,
-                Self = self, 
                 Id = model.Id,
                 Username = model.Username,
                 VkId = model.VkId,
+            };
+        }
+
+        /// <summary>
+        /// Получить информацию о пользователе
+        /// </summary>
+        /// <param name="model">Модель</param>
+        /// <param name="configuration">Конфигурация</param>
+        /// <returns></returns>
+        public static FriendResponseModel ToFriendResponseModel(this UserModel model, IConfiguration configuration)
+        {
+            return new FriendResponseModel()
+            {
+                Firstname = model.Firstname,
+                HasAvatar = model.HasAvatar,
+                Lastname = model.Lastname,
+                UserId = model.Id,
+                FriendLabelId = null,
+                AvatarUrl = model.HasAvatar ? $"https://{configuration["Domain"]}/avatars/user?userId={model.Id}" : $"https://{configuration["Domain"]}/avatars/default", 
+                HasProfile = true,
+                VkId = model.VkId,
+                HasVk = model.VkId != null
+            };
+        }
+
+        /// <summary>
+        /// Получить информацию о пользователе
+        /// </summary>
+        /// <param name="model">Модель</param>
+        /// <param name="configuration">Конфигурация</param>
+        /// <returns></returns>
+        public static FriendResponseModel ToFriendResponseModel(this OfflineFriendModel model, IConfiguration configuration)
+        {
+            return new FriendResponseModel()
+            {
+                Firstname = model.Firstname,
+                HasAvatar = model.HasAvatar,
+                Lastname = model.Lastname,
+                UserId = null,
+                FriendLabelId = model.Id,
+                AvatarUrl = model.HasAvatar ? $"https://{configuration["Domain"]}/avatars/friends?userId={model.Id}" : $"https://{configuration["Domain"]}/avatars/default",
+                HasProfile = false,
+                VkId = model.VkId,
+                HasVk = model.VkId != null
             };
         }
     }

@@ -1,4 +1,6 @@
-﻿namespace DeliCheck.Models
+﻿using DeliCheck.Schemas;
+
+namespace DeliCheck.Models
 {
     /// <summary>
     /// Моедль чека
@@ -34,8 +36,16 @@
         /// </summary>
         public bool FromFns { get; set; }
         /// <summary>
-        /// Созданы ли счета по этому чеку. Если true, изменения чека больше недоступны
+        /// Созданы ли счета по этому чеку. Если true, изменения чека больше недоступны. Может быть true, только если <see cref="EditingFinished"/> = true
         /// </summary>
         public bool BillsCreated { get; set; }
+        /// <summary>
+        /// Завершено ли изменение чека. Когда true, изменения чека больше недоступны
+        /// </summary>
+        public bool EditingFinished { get; set; }
+        /// <summary>
+        /// Тип деления чека
+        /// </summary>
+        public InvoiceSplitType SplitType { get; set; }
     }
 }

@@ -61,7 +61,7 @@ namespace DeliCheck.Web.Models
             {
                 Id = model.Id,
                 Name = model.Name,
-                Count = model.Count,
+                Count = model.Quantity,
                 Cost = (int)Math.Round(model.Cost),
             };
         }

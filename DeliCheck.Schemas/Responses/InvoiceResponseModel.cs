@@ -48,9 +48,14 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("from_fns")]
         public bool FromFns { get; set; }
         /// <summary>
-        /// Созданы ли счета по этому чеку. Если true, изменения чека больше недоступны
+        /// Созданы ли счета по этому чеку. Если true, изменения чека больше недоступны. Может быть true, только если <see cref="EditingFinished"/> = true
         /// </summary>
         [JsonPropertyName("bills_created")]
         public bool BillsCreated { get; set; }
+        /// <summary>
+        /// Завершено ли изменение чека. Когда true, изменения чека больше недоступны
+        /// </summary>
+        [JsonPropertyName("editing_finished")]
+        public bool EditingFinished { get; set; }
     }
 }

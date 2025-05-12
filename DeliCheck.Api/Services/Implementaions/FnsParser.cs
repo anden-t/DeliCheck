@@ -1,4 +1,6 @@
 ﻿using DeliCheck.Models;
+using DeliCheck.Schemas;
+using DeliCheck.Utils;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -88,9 +90,10 @@ namespace DeliCheck.Services
                 {
                     items.Add(new InvoiceItemModel() 
                     {
-                        Name = item["name"].GetValue<string>(),
-                        Count = item["quantity"].GetValue<decimal>(),
-                        Cost = item["sum"].GetValue<decimal>() / 100
+                        Name = item["name"].GetValue<string>().CapsToLower(),
+                        Quantity = item["quantity"].GetValue<decimal>(),
+                        Cost = item["sum"].GetValue<decimal>() / 100,
+                        QuantityMeasure = (ItemQuantityMeasure)(item["itemsQuantityMeasure"]?.GetValue<int>() ?? 0)
                     });    
                 }
 

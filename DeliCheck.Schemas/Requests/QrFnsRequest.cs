@@ -4,7 +4,7 @@ namespace DeliCheck.Schemas.Requests
 {
     public class QrFnsRequest
     {
-        [JsonPropertyName("content")]
-        public string Content { get; set; }
+        [JsonPropertyName("qr_code_text")]
+        public string QrCodeText { get; set; }
     }
 }

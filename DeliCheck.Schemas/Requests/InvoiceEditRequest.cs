@@ -11,7 +11,6 @@ namespace DeliCheck.Schemas.Requests
         [Required]
         [JsonPropertyName("name")]
         public string? Name { get; set; }
-        [Required]
         [JsonPropertyName("items")]
         public List<InvoiceEditItem>? Items { get; set; }
     }

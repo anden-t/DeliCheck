@@ -1,0 +1,52 @@
+﻿
+@using DeliCheck.Web.Models
+@using BlazorBarcodeScanner.ZXing.JS
+
+@inject DialogService _dialogService
+@inject NotificationService _notify
+
+<div class="qr-cont" style="max-height: 700px; width: 100%;">
+    <div style="margin: 0 auto">
+        <BlazorBarcodeScanner.ZXing.JS.BarcodeReader @ref="_reader" Title="" OnErrorReceived="ErrorReceived" TextWithoutDevices="Не найдено ни одной камеры" LabelVideoDeviceListText="Выберите камеру: " ShowVideoDeviceList=true ShowReset=false ShowResult=false ShowStart=false ShowStop=false ShowToggleTorch=false StartCameraAutomatically=true OnBarcodeReceived="ReceivedBarcodeText" />
+    </div>
+</div>
+
+<style>
+    /* .zxing-video-container {
+    margin: 0 auto;
+    } */
+
+    video {
+    margin: 0 auto;
+    }
+</style>
+
+@code {
+    private BarcodeReader _reader;
+    public string BarcodeText;
+    private async void ErrorReceived(ErrorReceivedEventArgs args)
+    {
+        if (args.Message == "Camera acces is blocked. Please give access to camera for using barcode scanner.")
+        {
+            
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Нет разрешения", Detail = "Предоставьте разрешение для камеры в настройках браузере", Duration = 4000 });
+        }
+        else 
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Ошибка", Detail = args.Message, Duration = 4000 });
+    }
+
+    private async void ReceivedBarcodeText(BarcodeReceivedEventArgs args)
+    {
+        BarcodeText = args.BarcodeText;
+        StateHasChanged();
+
+        if (!string.IsNullOrWhiteSpace(BarcodeText) && BarcodeText.Contains("fn="))
+        {
+            _dialogService.Close(BarcodeText);
+        }
+        else
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Не тот QR-код", Detail = "Убедитесь, что сканируете QR-код фискального чека", Duration = 2000 });
+        }
+    }
+}
