@@ -208,7 +208,7 @@ namespace DeliCheck.Controllers
         /// <returns>Ссылка для авторизации через ВК</returns>
         [HttpGet("vk")]
         [ProducesResponseType(typeof(VkAuthResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult Vk()
+        public IActionResult Vk(string? returnUrl)
         {
             var codeVerifier = _vkApiService.GetCodeVerifier();
             var codeChallenge = _vkApiService.GetCodeChallenge(codeVerifier);
@@ -217,7 +217,10 @@ namespace DeliCheck.Controllers
             if (_codeVerifiers.ContainsKey(state)) _codeVerifiers.Remove(state);
             _codeVerifiers.Add(state, codeVerifier);
 
-            return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetVkAuthUrl(codeChallenge, state) }));
+            if(string.IsNullOrWhiteSpace(returnUrl))
+                return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetVkAuthUrl(codeChallenge, state) }));
+            else
+                return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetVkAuthUrl(codeChallenge, state, returnUrl) }));
         }
 
         /// <summary>
@@ -227,7 +230,7 @@ namespace DeliCheck.Controllers
         [HttpGet("vk-connect")]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.Unauthorized)]
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
-        public IActionResult VkConnect([FromHeader(Name = "x-session-token")] [Required] string sessionToken)
+        public IActionResult VkConnect([FromHeader(Name = "x-session-token")] [Required] string sessionToken, string? returnUrl)
         {
             var token = _authService.GetSessionTokenByString(sessionToken);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
@@ -239,7 +242,10 @@ namespace DeliCheck.Controllers
             if (_codeVerifiers.ContainsKey(state)) _codeVerifiers.Remove(state);
             _codeVerifiers.Add(state, codeVerifier);
 
-            return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetVkAuthUrl(codeChallenge, state) }));
+            if (string.IsNullOrWhiteSpace(returnUrl))
+                return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetConnectVkAuthUrl(codeChallenge, state) }));
+            else
+                return Ok(new VkAuthResponse(new VkAuthResponseModel() { Url = _vkApiService.GetConnectVkAuthUrl(codeChallenge, state, returnUrl) }));
         }
 
         /// <summary>

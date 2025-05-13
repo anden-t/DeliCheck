@@ -112,10 +112,26 @@
 
         _invoice = await _client.GetInvoice(id);
 
-        if (!_invoice.BillsCreated)
+        if(_invoice.SplitType == Schemas.InvoiceSplitType.ByOwner)
         {
-            _nav.NavigateTo($"/deli?id={id}");
-            return;
+            if (!_invoice.BillsCreated)
+            {
+                _nav.NavigateTo($"/deli?id={id}");
+                return;
+            }
+        }
+        else
+        {
+            if(!_invoice.EditingFinished)
+            {
+                _nav.NavigateTo($"/editing?id={id}");
+                return;
+            }
+            else if (!_invoice.BillsCreated)
+            {
+                _nav.NavigateTo($"/lobby?id={id}");
+                return;
+            }
         }
 
         _items = _invoice.Items.FromList().AsQueryable();

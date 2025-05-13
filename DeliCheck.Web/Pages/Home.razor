@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using System.Text.Json
+@using DeliCheck.Schemas
 @using DeliCheck.Web.Models
 @using Blazorise.LottieAnimation
 
@@ -77,7 +78,10 @@
         try
         {
             var invoice = await _client.InvoiceQr(res, type.Type);
-            _nav.NavigateTo($"/deli?id={invoice.Id}");
+            if(type.Type == InvoiceSplitType.ByOwner)
+                _nav.NavigateTo($"/deli?id={invoice.Id}");
+            else
+                _nav.NavigateTo($"/editing?id={invoice.Id}");
         }
         catch (ApiException ex)
         {
@@ -91,10 +95,6 @@
             await InvokeAsync(() => StateHasChanged());
         }
     }
-
-    private string BarcodeText;
-
-    
 
     public async void OpenFileUpload()
     {
@@ -126,7 +126,10 @@
         try
         {
             var invoice = await _client.InvoiceOcr(res, type.Type);
-            _nav.NavigateTo($"/deli?id={invoice.Id}");
+            if (type.Type == InvoiceSplitType.ByOwner)
+                _nav.NavigateTo($"/deli?id={invoice.Id}");
+            else
+                _nav.NavigateTo($"/editing?id={invoice.Id}");
         }
         catch (ApiException ex)
         {

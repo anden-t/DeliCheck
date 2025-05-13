@@ -108,6 +108,7 @@ namespace DeliCheck.Controllers
                     {
                         invoice.OwnerId = token.UserId;
                         invoice.CreatedTime = DateTime.UtcNow;
+                        invoice.SplitType = splitType;
                         db.Invoices.Add(invoice);
                         await db.SaveChangesAsync();
 
@@ -166,6 +167,7 @@ namespace DeliCheck.Controllers
                     {
                         invoice.OwnerId = token.UserId;
                         invoice.CreatedTime = DateTime.UtcNow;
+                        invoice.SplitType = splitType;
                         db.Invoices.Add(invoice);
                         await db.SaveChangesAsync();
 
@@ -229,7 +231,7 @@ namespace DeliCheck.Controllers
 
                 invoice.EditingFinished = true;
                 await db.SaveChangesAsync();
-                return Ok();
+                return Ok(ApiResponse.Success());
             }
         }
 

@@ -48,6 +48,11 @@ namespace DeliCheck.Schemas.Responses
         [JsonPropertyName("from_fns")]
         public bool FromFns { get; set; }
         /// <summary>
+        /// Тип деления чека
+        /// </summary>
+        [JsonPropertyName("split_type")]
+        public InvoiceSplitType SplitType { get; set; }
+        /// <summary>
         /// Созданы ли счета по этому чеку. Если true, изменения чека больше недоступны. Может быть true, только если <see cref="EditingFinished"/> = true
         /// </summary>
         [JsonPropertyName("bills_created")]

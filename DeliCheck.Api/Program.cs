@@ -66,7 +66,7 @@ var app = builder.Build();
 //if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
-app.MapHub<SplittingBillsHub>("/bills-hub");
+app.MapHub<LobbyHub>("/lobby-hub");
 app.UseCors(builder => builder
          .SetIsOriginAllowed(callerHost
                 => true//callerHost.Contains("http://localhost:5208") || 

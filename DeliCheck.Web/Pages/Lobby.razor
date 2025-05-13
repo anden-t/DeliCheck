@@ -1,0 +1,356 @@
+﻿@page "/lobby"
+@using DeliCheck.Schemas
+@using DeliCheck.Schemas.Requests
+@using DeliCheck.Schemas.Responses
+@using System.Globalization
+@using DeliCheck.Schemas.SignalR.Requests
+@using DeliCheck.Schemas.SignalR.Responses
+@using Microsoft.AspNetCore.SignalR.Client
+@using DeliCheck.Web.Utils
+@implements IAsyncDisposable
+
+@inject DeliCheckClient _client
+@inject DialogService _dialog
+@inject NotificationService _notify
+@inject ContextMenuService _contextMenuService
+@inject NavigationManager _nav
+
+<PageTitle>ДелиЧек — Разделить чек</PageTitle>
+
+<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
+    <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Разделить чек</RadzenText>
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Выберите людей, с которыми хотите разделить чек</RadzenText>
+        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+            <RadzenStack class="rz-mb-1" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenText class="rz-mb-0" TextAlign="TextAlign.Left" TextStyle="TextStyle.H6" style="font-weight: 600;">Список позиций</RadzenText>
+            </RadzenStack>
+            <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "items" })" Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:100%;margin-top:1rem;padding:0px;overflow-x:hidden" : "")"
+            WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
+            Data="@_items" TItem="InvoiceItem" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" IsLoading="@_isLoading">
+                <Template Context="item">
+                    <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch">
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                            <RadzenFormField Text="Название" Style="width: 100%; margin-right: 0.5rem">
+                                <ChildContent>
+                                    <RadzenTextBox Disabled="@(!item.IsEditingName)" Value="@(item.Name)" aria-label="Название" />
+                                </ChildContent>
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="@($"Цена за {(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())} {item.QuantityMeasure.ToShortString()}.")" style="@((item.IsEditingCost ? "max-width: 9rem" : "max-width: 7rem") + ";width:100%")">
+                                <ChildContent>
+                                    <RadzenNumeric TValue="int" ShowUpDown="false" Disabled="true" Value="@(item.Cost)" Format="# ₽" aria-label="Цена" />
+                                </ChildContent>
+                            </RadzenFormField>
+
+                            <RadzenFormField Text="Количество" style="max-width: 7rem; width:100%">
+                                <ChildContent>
+                                    <RadzenNumeric TValue="decimal" ShowUpDown="false" Disabled="true" Value="@(item.Count)" Format="@($"# {item.QuantityMeasure.ToShortString()}")" aria-label="@($"{item.QuantityMeasure.ToLongStringTitle()}")" />
+                                </ChildContent>
+                            </RadzenFormField>
+                        </RadzenStack>
+
+                        <div style="overflow-x: auto; height: 100px; overflow-y: hidden;">
+                            <div style="max-width: 1000px; height: 85px">
+                                <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 1000px; height: 85px"
+                                TItem="Friend" AllowVirtualization="false" WrapItems="true" AllowPaging="false" Data="@_selected">
+
+                                    <Template Context="user">
+                                        <div class="rz-shadow-2" style="cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 90px; width: 90px; max-width: 90px; height: 80px; margin-top: 5px" item="true" @onclick="@((s) => OnClickUser(item, user))">
+
+
+                                            <div class="@(item.UsersParts[user] == 0 ? "rz-shadow-2" : "rz-background-color-primary")" style="transition: all 150ms ease-in-out; position: absolute; top: -5px; left:70px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px">
+                                                <RadzenText class="rz-mb-0" Style="@($"{(item.UsersParts[user] == 0 ? "" : "color: var(--rz-on-primary);")} min-width: 16px; width: 16px; text-align: center; font-size: 0.8rem; font-weight: 600")" Text="@($"x{(item.UsersParts[user])}")" />
+                                            </div>
+
+                                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+                                                <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 3rem; height: 3rem;" />
+                                                <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 84px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
+                                            </RadzenStack>
+
+
+                                        </div>
+                                    </Template>
+                                </RadzenDataList>
+                            </div>
+                        </div>
+
+                    </RadzenStack>
+                </Template>
+            </RadzenDataList>
+        </RadzenStack>
+        <div style="width: 100%; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
+        <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textTotal"></RadzenText>
+        <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textMy"></RadzenText>
+
+        <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Разделяем..." Text=@_submitButtonText Click="@CreateBills"></RadzenButton>
+    </div>
+
+</RadzenStack>
+
+<style>
+
+    :root {
+    --rz-input-disabled-color: var(--rz-text-h6-color);
+    }
+
+    .rz-numeric input[type=text] {
+    padding-inline: 0.5rem 0.25rem;
+    }
+
+    div[list=items] > .rz-datalist-data {
+    padding: 0px;
+    }
+
+    div[list=items] > .rz-datalist-data > li {
+    border-width: 1px 0px 0px 0px;
+    border-radius: 0px;
+    padding: 1rem 0px;
+    }
+
+    div[list=users] > .rz-g {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    }
+
+    div[list=users] > .rz-g > div {
+    margin-block: 0px;
+    margin-inline: 0rem 1rem;
+    padding: 0.125rem 0.125rem;
+    }
+
+</style>
+
+@code {
+    private bool allowVirtualization = true;
+    private bool _isLoading = false;
+    private bool _adding = false;
+    private bool _processing = false;
+
+    private bool _tips = false;
+    private bool _discount = false;
+
+    private bool _processAllowed = false;
+    private int _myUserId;
+    private int _invoiceId;
+    private string _textTotal;
+    private string _textMy;
+    private string _submitButtonText;
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? Id { get; set; }
+
+    private InvoiceResponseModel _invoice;
+
+    private List<Friend> _selected;
+
+    private IQueryable<InvoiceItem> _items;
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        if (Id == null || !int.TryParse(Id, out int id))
+            return;
+
+        while (!await _client.IsAuthenticated())
+        {
+            var val = await _dialog.OpenAsync<RegisterAsGuestDialog>($"Войдите, чтобы продолжить",
+               new Dictionary<string, object>()
+                   {
+                       ["Id"] = id
+                   },
+               new DialogOptions()
+                   {
+                       Resizable = false,
+                       Draggable = true,
+                       Width = "350",
+                       ShowClose = false
+                   });
+        }
+
+        _isLoading = true;
+        await InvokeAsync(StateHasChanged);
+
+        var myProfile = await _client.GetProfile();
+        _invoice = await _client.GetInvoice(id);
+        _invoiceId = id;
+        _myUserId = myProfile.Id;
+
+        if (_invoice.BillsCreated)
+        {
+            _nav.NavigateTo($"/invoice?id={id}");
+            return;
+        }
+
+        if (_invoice.SplitType == InvoiceSplitType.ByOwner)
+        {
+            _nav.NavigateTo($"/deli?id={id}");
+            return;
+        }
+
+        if (!_invoice.EditingFinished)
+        {
+            _nav.NavigateTo($"/editing?id={id}");
+            return;
+        }
+
+        if (_invoice.OwnerId == _myUserId)
+            _submitButtonText = "Разделить чек";
+        else
+            _submitButtonText = "Я выбрал все свои позиции!";
+
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Program.AppUrl + "lobby-hub")
+            .Build();
+
+        hubConnection.On<ActualInvoiceSplittingResponse>(ActualInvoiceSplittingResponse.MethodName, (response) =>
+        {
+            try
+            {
+                var selected = response.SplittingModel.Users.Select(x => { var f = x.FromModel(); f.Finished = response.SplittingModel.FinishedUsers.Contains(f.UserId.Value); return f; }).ToList();
+                _selected = selected;
+
+                var items = response.SplittingModel.Items.Select(x => x.FromModel(_selected)).ToList();
+                _items = items.AsQueryable<InvoiceItem>();
+                Console.WriteLine(_selected.Count);
+                Console.WriteLine(_items.Count());
+                int mySum = 0;
+                response.SplittingModel.UsersSum.TryGetValue(_myUserId, out mySum);
+
+                _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
+                _textMy = $"Моя доля: {mySum} ₽";
+
+                if (_invoice.OwnerId == _myUserId)
+                    _processAllowed = _selected.Count > 1 && _selected.Where(x => x.UserId != _myUserId).All(x => x.Finished);
+                else
+                    _processAllowed = _items.Any(x => x.UsersParts.Any(x => x.Key.UserId == _myUserId && x.Value > 0));
+            }
+            catch (Exception ex)
+            {
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+            }
+            finally
+            {
+                InvokeAsync(StateHasChanged);
+            }
+        });
+
+        hubConnection.On<NotifyResponse>(NotifyResponse.MethodName, (response) =>
+        {
+            _notify.Notify(new NotificationMessage { Severity = response.Level.GetNotificationSeverity(), Summary = response.Summary, Detail = response.Detail, Duration = 4000 });
+        });
+
+        hubConnection.On<InvoiceSplittingFinishedResponse>(InvoiceSplittingFinishedResponse.MethodName, (response) =>
+        {
+            try
+            {
+                hubConnection.StopAsync();
+                _nav.NavigateTo($"/invoice?id={response.InvoiceId}");
+            }
+            catch (Exception ex)
+            {
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+            }
+            finally
+            {
+                InvokeAsync(StateHasChanged);
+            }
+        });
+
+        await hubConnection.StartAsync();
+        if (_invoice.OwnerId == _myUserId)
+            await hubConnection.SendAsync(CreateRequest.MethodName, new CreateRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+
+        await hubConnection.SendAsync(JoinRequest.MethodName, new JoinRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+
+        _isLoading = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (hubConnection != null)
+            {
+                if(hubConnection.State == HubConnectionState.Connected)
+                    await hubConnection.SendAsync(LeaveRequest.MethodName, new LeaveRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+
+                await hubConnection.DisposeAsync();
+            }
+        } catch { }
+    }
+
+    private async Task OnClickUser(InvoiceItem item, Friend user)
+    {
+        try
+        {
+            if (user.UserId == _myUserId)
+            {
+                var part = item.UsersParts[user];
+                if (item.Count % 1 == 0 && item.Count != 1)
+                {
+                    var max = item.Count;
+                    var sum = item.UsersParts.Where(x => x.Key.UserId != _myUserId).Sum(x => x.Value);
+                    if (++part + sum > max) item.UsersParts[user] = 0;
+                    else item.UsersParts[user]++;
+                }
+                else
+                {
+                    if (part == 1) item.UsersParts[user] = 0;
+                    else item.UsersParts[user] = 1;
+                }
+
+                await InvokeAsync(StateHasChanged);
+                if (hubConnection != null)
+                {
+                    await hubConnection.SendAsync(SelectItemRequest.MethodName, new SelectItemRequest() { InvoiceId = _invoiceId, ItemId = item.Id, SessionToken = await GetSessionTokenAsync() });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+    }
+
+    private async Task<string> GetSessionTokenAsync() => (await _client.GetSessionTokenAsync())?.Token ?? "";
+
+    private async Task CreateBills()
+    {
+        try
+        {
+            _processing = true;
+            await InvokeAsync(StateHasChanged);
+
+            if (_invoice.OwnerId != _myUserId)
+            {
+                if (hubConnection != null)
+                {
+                    await hubConnection.SendAsync(ChangeUserFinishedRequest.MethodName, new ChangeUserFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                }
+            }
+            else
+            {
+                if (hubConnection != null)
+                {
+                    await hubConnection.SendAsync(ChangeUserFinishedRequest.MethodName, new ChangeUserFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                    await hubConnection.SendAsync(FinishRequest.MethodName, new FinishRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                }
+            }
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _processing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

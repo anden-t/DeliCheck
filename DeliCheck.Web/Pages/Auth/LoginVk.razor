@@ -31,6 +31,10 @@
     [SupplyParameterFromQuery(Name = "device_id")]
     public string? DeviceId { get; set; }
 
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "return_to")]
+    public string? ReturnUrl { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (string.IsNullOrWhiteSpace(Code) 
@@ -47,9 +51,12 @@
         try
         {
             var response = await _client.VkCallback(Code, State, DeviceId);
-
             await _client.SaveLogin(response);
-            _nav.NavigateTo("/");
+
+            if(!string.IsNullOrWhiteSpace(ReturnUrl))
+                _nav.NavigateTo(ReturnUrl);
+            else
+                _nav.NavigateTo("/");
         }
         catch (ApiException ex)
         {

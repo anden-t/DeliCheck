@@ -1,4 +1,4 @@
-﻿@page "/deli"
+﻿@page "/editing"
 @using DeliCheck.Schemas
 @using DeliCheck.Schemas.Requests
 @using DeliCheck.Schemas.Responses
@@ -10,22 +10,20 @@
 @inject ContextMenuService _contextMenuService
 @inject NavigationManager _nav
 
-<PageTitle>ДелиЧек — Разделить чек</PageTitle>
+<PageTitle>ДелиЧек — Редактировать чек</PageTitle>
 
 <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
     <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
 
         <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Разделить чек</RadzenText>
-        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Выберите людей, с которыми хотите разделить чек</RadzenText>
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Для начала отредактируйте чек, если требуются исправления</RadzenText>
 
 
         <RadzenStack Orientation="Orientation.Vertical" Gap="0">
 
-            <RadzenButton class="my-button rz-mb-5" Text="@($"Люди ({(_selected == null ? "0" : _selected.Count - 1)})")" Icon="group" Click="@OpenFriends"></RadzenButton>
-
             <RadzenStack class="rz-mb-1" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText class="rz-mb-0" TextAlign="TextAlign.Left" TextStyle="TextStyle.H6" style="font-weight: 600;">Список позиций</RadzenText>
-                <RadzenButton Icon="add" Click=@AddItem IsBusy=@_adding class="my-button" ButtonStyle="ButtonStyle.Primary"/>
+                <RadzenButton Icon="add" Click=@AddItem IsBusy=@_adding class="my-button" ButtonStyle="ButtonStyle.Primary" />
             </RadzenStack>
 
 
@@ -61,16 +59,16 @@
 
 
                         <RadzenStack class="rz-mt-1" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText Text="@(((item.Count == 1 || !item.CountInteger) ? item.UsersParts.Values.Sum() == 0 : item.UsersParts.Values.Sum() != item.Count) ? "Разделите позицию" : "")" style="color: var(--rz-danger)"/>
+                            <RadzenText Text="@(((item.Count == 1 || !item.CountInteger) ? item.UsersParts.Values.Sum() == 0 : item.UsersParts.Values.Sum() != item.Count) ? "Разделите позицию" : "")" style="color: var(--rz-danger)" />
 
                             <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center">
 
                                 <RadzenText class="rz-mb-0" Style="font-size: 0.75rem">Количество</RadzenText>
                                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-                                    <RadzenButton Variant="Variant.Text" IsBusy="@item.SavingDecreaseCount" Disabled="@(item.SavingIncreaseCount || !item.CountInteger || item.Count == 1)" ButtonStyle="ButtonStyle.Base" Icon="remove" Click="@(() => DecreaseCount(item))"/>
+                                    <RadzenButton Variant="Variant.Text" IsBusy="@item.SavingDecreaseCount" Disabled="@(item.SavingIncreaseCount || !item.CountInteger || item.Count == 1)" ButtonStyle="ButtonStyle.Base" Icon="remove" Click="@(() => DecreaseCount(item))" />
 
                                     <RadzenText class="rz-mb-0 rz-mx-2" Text="@(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())"></RadzenText>
-                                    <RadzenButton Variant="Variant.Text" IsBusy="@item.SavingIncreaseCount" Disabled="@(item.SavingDecreaseCount || !item.CountInteger)" ButtonStyle="ButtonStyle.Base" Icon="add" Click="@(() => IncreaseCount(item))"/>
+                                    <RadzenButton Variant="Variant.Text" IsBusy="@item.SavingIncreaseCount" Disabled="@(item.SavingDecreaseCount || !item.CountInteger)" ButtonStyle="ButtonStyle.Base" Icon="add" Click="@(() => IncreaseCount(item))" />
 
                                 </RadzenStack>
 
@@ -87,32 +85,6 @@
                             </RadzenFormField> *@
                         </RadzenStack>
 
-
-                        <div style="overflow-x: auto; height: 100px; overflow-y: hidden;">
-                            <div style="max-width: 1000px; height: 85px">
-                                <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 1000px; height: 85px"
-                                TItem="Friend" AllowVirtualization="false" WrapItems="true" AllowPaging="false" Data="@_selected">
-
-                                    <Template Context="user">
-                                        <div class="rz-shadow-2" style="cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 90px; width: 90px; max-width: 90px; height: 80px; margin-top: 5px" item="true" @onclick="@((s) => OnClickUser(item, user))">
-
-
-                                            <div class="@(item.UsersParts[user] == 0 ? "rz-shadow-2" : "rz-background-color-primary")" style="transition: all 150ms ease-in-out; position: absolute; top: -5px; left:70px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px">
-                                                <RadzenText class="rz-mb-0" Style="@($"{(item.UsersParts[user] == 0 ? "" : "color: var(--rz-on-primary);")} min-width: 16px; width: 16px; text-align: center; font-size: 0.8rem; font-weight: 600")" Text="@($"x{(item.UsersParts[user])}")" />
-                                            </div>
-
-                                            <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                                                <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 3rem; height: 3rem;" />
-                                                <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 84px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
-                                            </RadzenStack>
-
-
-                                        </div>
-
-                                    </Template>
-                                </RadzenDataList>
-                            </div>
-                        </div>
                         <RadzenButton Variant="Variant.Text" Style="font-size: 0.7rem;" IsBusy=@item.Deleting BusyText="Удаляем..." Text="Удалить позицию" ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteItem(item))" />
                     </RadzenStack>
                 </Template>
@@ -123,7 +95,7 @@
 
 
 
-        <div style="width: 100%; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;"/>
+        <div style="width: 100%; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
 
         <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textTotal"></RadzenText>
 
@@ -132,7 +104,7 @@
             <RadzenButton class=" my-button rz-w-100" Icon="savings" IsBusy=@_tips BusyText="Добавляем чаевые..." Text="Чаевые" Click="@AddTips"></RadzenButton>
         </RadzenStack>
 
-        <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Разделяем..." Text="Разделить чек" Click="@CreateBills"></RadzenButton>
+        <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Разделяем..." Text="Завершить редактирование" Click="@FinishEditing"></RadzenButton>
     </div>
 
 </RadzenStack>
@@ -182,7 +154,6 @@
     private bool _discount = false;
 
     private bool _processAllowed = false;
-    private Friend _i;
     private int _myUserId;
 
     private string _textTotal;
@@ -192,8 +163,6 @@
     public string? Id { get; set; }
 
     private InvoiceResponseModel _invoice;
-
-    private List<Friend> _selected;
 
     private IQueryable<InvoiceItem> _items;
 
@@ -211,25 +180,26 @@
             return;
 
         _isLoading = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         var myProfile = await _client.GetProfile();
-        _myUserId = myProfile.Id;
-
         _invoice = await _client.GetInvoice(id);
 
         if (_invoice.BillsCreated)
         {
             _nav.NavigateTo($"/invoice?id={id}");
-            return;    
+            return;
         }
 
-        if(_invoice.SplitType == InvoiceSplitType.ByMembers)
+        if (_invoice.SplitType == InvoiceSplitType.ByOwner)
         {
-            if (_invoice.EditingFinished)
-                _nav.NavigateTo($"/lobby?id={id}");
-            else
-                _nav.NavigateTo($"/editing?id={id}");
+            _nav.NavigateTo($"/deli?id={id}");
+            return;
+        }
+
+        if (_invoice.EditingFinished)
+        {
+            _nav.NavigateTo($"/lobby?id={id}");
             return;
         }
 
@@ -241,83 +211,21 @@
 
         _items = _invoice.Items.FromList().AsQueryable();
 
-        _i = new Friend()
-            {
-                Firstname = "Я",
-                HasAvatar = true,
-                AvatarUrl = myProfile.AvatarUrl,
-                UserId = myProfile.Id,
-                HasProfile = true
-            };
 
-        _selected = new List<Friend>() { _i };
-        foreach (var item in _items)
-        {
-            if (!item.UsersParts.ContainsKey(_i))
-                item.UsersParts.Add(_i, 0);
-        }
+        _myUserId = myProfile.Id;
 
-        RefreshTotal();
+        _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
         _isLoading = false;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    protected async Task OpenFriends()
-    {
-        var selected = await _dialog.OpenAsync<SelectFriends>($"Выберите друзей",
-        new Dictionary<string, object>()
-        {
-            ["SelectedFriends"] = _selected.Where(x => x.UserId != _myUserId).ToList()
-        },
-        new DialogOptions()
-        {
-            Resizable = false,
-            Draggable = true,
-        }) 
-        as List<Friend>;
-
-        if (selected == null)
-            return;
-
-        _selected ??= new List<Friend>();
-        selected ??= new List<Friend>();
-        selected.Add(_i);
-
-        List<Friend> unselected = new List<Friend>();
-
-        foreach (var s in _selected)
-            if (!selected.Contains(s))
-                unselected.Add(s);
-
-        List<Friend> nowSelected = new List<Friend>();
-
-        foreach (var s in selected)
-            if (!_selected.Contains(s))
-                nowSelected.Add(s);
-
-        _selected = selected;
-
-        foreach (var item in _items)
-            foreach (var user in unselected)
-                if (item.UsersParts.ContainsKey(user))
-                    item.UsersParts.Remove(user);
-
-        foreach (var item in _items)
-        {
-            foreach (var user in nowSelected)
-                if (!item.UsersParts.ContainsKey(user))
-                    item.UsersParts.Add(user, 0);
-        }
-
-        await InvokeAsync(StateHasChanged);
+        _processAllowed = true;
+        await InvokeAsync(() => StateHasChanged());
     }
 
     private async Task OnInputName(InvoiceItem item, ChangeEventArgs args)
     {
         item.EditedName = (string?)args.Value ?? string.Empty;
         item.EnableToSaveName = !string.IsNullOrWhiteSpace(item.EditedName) && item.EditedName != item.Name;
-        await InvokeAsync(StateHasChanged);
-    } 
+        await InvokeAsync(() => StateHasChanged());
+    }
 
     private async Task OnInputCost(InvoiceItem item, ChangeEventArgs args)
     {
@@ -336,22 +244,18 @@
 
         item.EditedCost = cost;
         item.EnableToSaveCost = item.EditedCost != item.Cost;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
     }
-
 
     private async Task IncreaseCount(InvoiceItem item)
     {
         item.SavingIncreaseCount = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         try
         {
             await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.Cost, Count = item.Count + 1, Name = item.Name });
             item.Count += 1;
-
-            foreach (var users in item.UsersParts)
-                item.UsersParts[users.Key] = 0;
         }
         catch (ApiException ex)
         {
@@ -360,25 +264,23 @@
         finally
         {
             item.SavingIncreaseCount = false;
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
         }
 
+
         item.SavingIncreaseCount = false;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
     }
 
     private async Task DecreaseCount(InvoiceItem item)
     {
         item.SavingDecreaseCount = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         try
         {
             await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.Cost, Count = item.Count - 1, Name = item.Name });
             item.Count -= 1;
-
-            foreach (var users in item.UsersParts)
-                item.UsersParts[users.Key] = 0;
         }
         catch (ApiException ex)
         {
@@ -387,9 +289,10 @@
         finally
         {
             item.SavingDecreaseCount = false;
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
         }
     }
+
 
     private async Task SaveName(InvoiceItem item)
     {
@@ -427,51 +330,15 @@
         }
         finally
         {
-            RefreshTotal();
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
             item.SavingCost = false;
         }
-    }
-
-    private async Task OnClickUser(InvoiceItem item, Friend user)
-    {
-        if (item.Count == 1 || item.Count % 1 != 0)
-        {
-            item.UsersParts[user] = item.UsersParts[user] == 0 ? 1 : 0;
-        }
-        else
-        {
-            int max = (int)item.Count;
-
-            int all = item.UsersParts.Values.Sum();
-
-            if (item.UsersParts[user] == max)
-                item.UsersParts[user] = 0;
-            else if (all < max)
-                item.UsersParts[user]++;
-            else
-            {
-                var firstGreatest = item.UsersParts.OrderByDescending(x => x.Value).FirstOrDefault(x => x.Key != user).Key;
-
-                if (Object.ReferenceEquals(firstGreatest, null))
-                {
-                    item.UsersParts[user] = 0;
-                }
-                else
-                {
-                    item.UsersParts[firstGreatest] -= 1;
-                    item.UsersParts[user]++;
-                }
-            }
-        }
-
-        RefreshTotal();
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task DeleteItem(InvoiceItem item)
     {
         item.Deleting = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         try
         {
@@ -486,16 +353,16 @@
         }
         finally
         {
-            item.Deleting = false;
-            RefreshTotal();
-            await InvokeAsync(StateHasChanged);
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
+            item.SavingDecreaseCount = false;
+            await InvokeAsync(() => StateHasChanged());
         }
     }
 
     private async Task AddItem()
     {
         _adding = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         try
         {
@@ -507,11 +374,6 @@
                     UsersParts = new Dictionary<Friend, int>()
                 };
 
-            foreach (var user in _selected)
-            {
-                item.UsersParts.Add(user, 0);
-            }
-
             var res = await _client.AddInvoiceItem(_invoice.Id, item);
 
             item.Id = res.Id;
@@ -525,16 +387,16 @@
         }
         finally
         {
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
             _adding = false;
-            RefreshTotal();
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
         }
     }
 
     private async Task AddTips()
     {
         _tips = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         try
         {
@@ -546,11 +408,6 @@
                     UsersParts = new Dictionary<Friend, int>()
                 };
 
-            foreach (var user in _selected)
-            {
-                item.UsersParts.Add(user, 1);
-            }
-
             var res = await _client.AddInvoiceItem(_invoice.Id, item);
 
             item.Id = res.Id;
@@ -564,9 +421,9 @@
         }
         finally
         {
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
             _tips = false;
-            RefreshTotal();
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
         }
     }
 
@@ -588,12 +445,14 @@
         if (val == null)
             return;
 
+        //var discount = ((int)val / 100m) * cost;
+
         _discount = true;
-        await InvokeAsync(StateHasChanged);
+        await InvokeAsync(() => StateHasChanged());
 
         try
         {
-            foreach(var item in _items)
+            foreach (var item in _items)
             {
                 item.EditedCost = item.Cost - (int)Math.Round(((int)val / 100m) * item.Cost);
                 await SaveCost(item);
@@ -605,58 +464,20 @@
         }
         finally
         {
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
             _discount = false;
-            RefreshTotal();
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
         }
     }
 
-    private void RefreshTotal()
-    {
-        _processAllowed = _items.All(x => ((x.Count == 1 || !x.CountInteger) ? x.UsersParts.Values.Sum() > 0 : x.UsersParts.Values.Sum() == x.Count));
-        _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
-    }
-
-    private async Task CreateBills()
+    private async Task FinishEditing()
     {
         try
         {
             _processing = true;
-            await InvokeAsync(StateHasChanged);
-
-            List<UserBill> bills = new List<UserBill>();
-
-            foreach (var user in _selected)
-            {
-                UserBill bill = new UserBill();
-
-                bill.OfflineOwner = !user.HasProfile;
-
-                bill.OwnerId = user.HasProfile ? (int)user.UserId : (int)user.FriendLabelId;
-                bill.Items = new List<Schemas.Requests.UserBillItem>();
-
-                foreach (var item in _items.Where(x => x.UsersParts.ContainsKey(user) && x.UsersParts[user] > 0))
-                {
-                    decimal userPart;
-
-                    if (item.Count == 1 || !item.CountInteger)
-                    {
-                        var allParts = item.UsersParts.Values.Sum();
-                        userPart = Math.Round((item.Count / allParts) * item.UsersParts[user], 2);
-                    }
-                    else
-                    {
-                        userPart = item.UsersParts[user];
-                    }
-
-                    bill.Items.Add(new Schemas.Requests.UserBillItem() { ItemId = item.Id, Quantity = userPart });
-                }
-
-                bills.Add(bill);
-            }
+            await InvokeAsync(() => StateHasChanged());
 
             await _client.FinishInvoiceEditing(_invoice.Id);
-            await _client.CreateBills(_invoice.Id, bills);
         }
         catch (ApiException ex)
         {
@@ -665,7 +486,8 @@
         finally
         {
             _processing = false;
-            await InvokeAsync(StateHasChanged);
+            await InvokeAsync(() => StateHasChanged());
+
             _nav.NavigateTo($"/invoice?id={_invoice.Id}");
         }
     }

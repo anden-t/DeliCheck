@@ -98,4 +98,92 @@
         /// </summary>
         Terabyte = 83
     }
+
+    public static class ItemQuantityMeasureExtension
+    {
+        /// <summary>
+        /// Возвращает строку меру количества в сокращенном виде (шт, кг, м и т.д.)
+        /// </summary>
+        /// <param name="measure">Мера количества</param>
+        /// <returns></returns>
+        public static string ToShortString(this ItemQuantityMeasure measure)
+        {
+            switch (measure)
+            {
+                //case ItemQuantityMeasure.Piece: return "ед";
+                case ItemQuantityMeasure.Piece: return "шт";
+                case ItemQuantityMeasure.Gram: return "гр";
+                case ItemQuantityMeasure.Kilogram: return "кг";
+                case ItemQuantityMeasure.Tons: return "т";
+                case ItemQuantityMeasure.Centimeter: return "см";
+                case ItemQuantityMeasure.Decimeter: return "дм";
+                case ItemQuantityMeasure.Meter: return "м";
+                case ItemQuantityMeasure.SquareCentimeter: return "см2";
+                case ItemQuantityMeasure.SquareDecimeter: return "дм2";
+                case ItemQuantityMeasure.SquareMeter: return "м2";
+                case ItemQuantityMeasure.Milliliter: return "мл";
+                case ItemQuantityMeasure.Liter: return "л";
+                case ItemQuantityMeasure.CubicMeter: return "м3";
+                case ItemQuantityMeasure.KilowattHour: return "кв/ч";
+                case ItemQuantityMeasure.Gigacalorie: return "гк";
+                case ItemQuantityMeasure.Day: return "д";
+                case ItemQuantityMeasure.Hour: return "ч";
+                case ItemQuantityMeasure.Minute: return "мин";
+                case ItemQuantityMeasure.Second: return "сек";
+                case ItemQuantityMeasure.Kilobyte: return "кб";
+                case ItemQuantityMeasure.Megabyte: return "мб";
+                case ItemQuantityMeasure.Gigabyte: return "гб";
+                case ItemQuantityMeasure.Terabyte: return "тб";
+                default: return "шт";
+            }
+        }
+
+        /// <summary>
+        /// Возвращает строку меру количества в родительском падеже (целое слово)
+        /// </summary>
+        /// <param name="measure">Мера количества</param>
+        /// <returns></returns>
+        public static string ToLongString(this ItemQuantityMeasure measure)
+        {
+            switch (measure)
+            {
+                //case ItemQuantityMeasure.Piece: return "единиц";
+                case ItemQuantityMeasure.Piece: return "порций";
+                case ItemQuantityMeasure.Gram: return "грамм";
+                case ItemQuantityMeasure.Kilogram: return "килограмм";
+                case ItemQuantityMeasure.Tons: return "тонн";
+                case ItemQuantityMeasure.Centimeter: return "санитиметров";
+                case ItemQuantityMeasure.Decimeter: return "дециметров";
+                case ItemQuantityMeasure.Meter: return "метров";
+                case ItemQuantityMeasure.SquareCentimeter: return "см2";
+                case ItemQuantityMeasure.SquareDecimeter: return "дм2";
+                case ItemQuantityMeasure.SquareMeter: return "м2";
+                case ItemQuantityMeasure.Milliliter: return "миллилитров";
+                case ItemQuantityMeasure.Liter: return "литров";
+                case ItemQuantityMeasure.CubicMeter: return "м3";
+                case ItemQuantityMeasure.KilowattHour: return "кв/ч";
+                case ItemQuantityMeasure.Gigacalorie: return "гк";
+                case ItemQuantityMeasure.Day: return "дней";
+                case ItemQuantityMeasure.Hour: return "часов";
+                case ItemQuantityMeasure.Minute: return "минут";
+                case ItemQuantityMeasure.Second: return "секунд";
+                case ItemQuantityMeasure.Kilobyte: return "килобайт";
+                case ItemQuantityMeasure.Megabyte: return "мегабайт";
+                case ItemQuantityMeasure.Gigabyte: return "гигабайт";
+                case ItemQuantityMeasure.Terabyte: return "терабайт";
+                default: return "штук";
+            }
+        }
+
+        /// <summary>
+        /// Возвращает строку меру количества в родительском падеже (целое слово) c заглавной буквы
+        /// </summary>
+        /// <param name="measure">Мера количества</param>
+        /// <returns></returns>
+        public static string ToLongStringTitle(this ItemQuantityMeasure measure)
+        {
+            var s = ToLongString(measure);
+            return s.Substring(0, 1).ToUpper() + s.Substring(1);
+        }
+    }
 }

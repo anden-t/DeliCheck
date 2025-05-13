@@ -59,7 +59,9 @@ namespace DeliCheck.Services
         }
 
         public string GetState() => Guid.NewGuid().ToString();
+        public string GetVkAuthUrl(string codeChallenge, string state, string returnUrl) => $"https://id.vk.com/authorize?response_type=code&client_id={HttpUtility.UrlEncode(AppId)}&state={HttpUtility.UrlEncode(state)}&code_challenge={codeChallenge}&code_challenge_method=S256&scope={HttpUtility.UrlEncode(Scope)}&redirect_uri={RedirectUri + $"?return_to={returnUrl}"}";
         public string GetVkAuthUrl(string codeChallenge, string state) => $"https://id.vk.com/authorize?response_type=code&client_id={HttpUtility.UrlEncode(AppId)}&state={HttpUtility.UrlEncode(state)}&code_challenge={codeChallenge}&code_challenge_method=S256&scope={HttpUtility.UrlEncode(Scope)}&redirect_uri={HttpUtility.UrlEncode(RedirectUri)}";
+        public string GetConnectVkAuthUrl(string codeChallenge, string state, string returnUrl) => $"https://id.vk.com/authorize?response_type=code&client_id={HttpUtility.UrlEncode(AppId)}&state={HttpUtility.UrlEncode(state)}&code_challenge={codeChallenge}&code_challenge_method=S256&scope={HttpUtility.UrlEncode(Scope)}&redirect_uri={RedirectConnectUri + $"?return_to={returnUrl}"}";
         public string GetConnectVkAuthUrl(string codeChallenge, string state) => $"https://id.vk.com/authorize?response_type=code&client_id={HttpUtility.UrlEncode(AppId)}&state={HttpUtility.UrlEncode(state)}&code_challenge={codeChallenge}&code_challenge_method=S256&scope={HttpUtility.UrlEncode(Scope)}&redirect_uri={HttpUtility.UrlEncode(RedirectConnectUri)}";
 
         public async Task<VkAuthorizationData> Login(string authorizationCode, string deviceId, string codeVerifier, string state)

@@ -99,6 +99,15 @@ namespace DeliCheck.Web.Services
 
             return token.IsValid;
         }
+        public async Task<AuthToken?> GetSessionTokenAsync()
+        {
+            var token = await _localStorage.GetItemAsync<AuthToken>("token");
+
+            if (token == null)
+                return null;
+
+            return token;
+        }
 
         public async Task<LoginResponseModel> Register(string username, string password, string firstname, string lastname, string email, string phonenumber)
         {
@@ -253,7 +262,9 @@ namespace DeliCheck.Web.Services
         public async Task<BillsListResponseModel> ListMyBills(int invoiceId) => await GetJson<BillsListResponseModel>($"/bills/list", true);
 
         public async Task<VkAuthResponseModel> Vk() => await GetJson<VkAuthResponseModel>("/auth/vk", false);
+        public async Task<VkAuthResponseModel> Vk(string returnUrl) => await GetJson<VkAuthResponseModel>($"/auth/vk?returnUrl={HttpUtility.UrlEncode(returnUrl)}", false);
         public async Task<VkAuthResponseModel> VkConnect() => await GetJson<VkAuthResponseModel>("/auth/vk-connect", true);
+        public async Task<VkAuthResponseModel> VkConnect(string returnUrl) => await GetJson<VkAuthResponseModel>($"/auth/vk-connect?returnUrl={HttpUtility.UrlEncode(returnUrl)}", true);
         public async Task<LoginResponseModel> VkCallback(string code, string state, string deviceId) 
             => await GetJson<LoginResponseModel>($"/auth/vk-callback?code={HttpUtility.UrlEncode(code)}&state={HttpUtility.UrlEncode(state)}&device_id={HttpUtility.UrlEncode(deviceId)}", false);
         public async Task VkConnectCallback(string code, string state, string deviceId)

@@ -24,6 +24,10 @@ namespace DeliCheck.Schemas.SignalR
         /// </summary>
         public List<int> FinishedUsers { get; set; }
         /// <summary>
+        /// Список сумм пользователей
+        /// </summary>
+        public Dictionary<int, int> UsersSum { get; set; }
+        /// <summary>
         /// Завершено ли деление чека
         /// </summary>
         public bool IsFinished { get; set; }

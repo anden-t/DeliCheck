@@ -17,13 +17,15 @@ namespace DeliCheck.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IAvatarService _avatarService;
+        private readonly IConfiguration _configuration;
         /// <summary>
         /// Создает контроллер, представляющий методы для профилей
         /// </summary>
-        public ProfileController(IAuthService authService, IAvatarService avatarService)
+        public ProfileController(IAuthService authService, IAvatarService avatarService, IConfiguration configuration)
         {
             _avatarService = avatarService;
             _authService = authService;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -48,7 +50,7 @@ namespace DeliCheck.Controllers
                 var user = db.Users.FirstOrDefault(x => x.Id == userId);
                 if (user == null) return BadRequest(ApiResponse.Failure(Constants.UserNotFound));
 
-                return Ok(new ProfileResponse(user.ToProfileResponseModel()));
+                return Ok(new ProfileResponse(user.ToProfileResponseModel(_configuration)));
             }
         }
 

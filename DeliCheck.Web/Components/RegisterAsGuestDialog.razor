@@ -1,0 +1,75 @@
+﻿@inject DeliCheckClient _client
+@inject NavigationManager _nav
+@inject NotificationService _notify
+@inject DialogService _dialogService
+
+<div class="rz-shadow-2 rz-border-radius-2 rz-mb-1 card" style="padding: 2rem; max-width: 350px;">
+    <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Stretch" Gap="0">
+        <div class="rz-mb-1">
+            <RadzenFormField Text="Имя" class="rz-w-100">
+                <RadzenTextBox @bind-Value="_firstname" @oninput="@((s) => FirstnameChanged((string?)s.Value ?? string.Empty))" aria-label="Имя" />
+            </RadzenFormField>
+        </div>
+
+        <div class="rz-mb-3">
+            <RadzenFormField Text="Фамилия" class="rz-w-100">
+                <RadzenTextBox @bind-Value="_lastname" aria-label="Фамилия" />
+            </RadzenFormField>
+        </div>
+
+
+        <RadzenButton class="rz-mb-0 my-button" @bind-Disabled=@_registerDisabled IsBusy=@_registerBusy BusyText="Регистрируемся..." Click=@Reg Text="Продолжить" ButtonStyle="ButtonStyle.Primary" />
+
+        <div class="rz-my-2" style="display: flex; justify-content: center; align-items: center;">
+            <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
+            <RadzenText style="font-size: 0.8rem" class="rz-mx-4 rz-my-0">или</RadzenText>
+            <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
+        </div>
+        <RadzenButton IsBusy=_loginVkBusy BusyText="Входим..." Variant="Variant.Flat" class="rz-mb-3 my-button" Text="Войти с VK" Click=@Vk ButtonStyle="ButtonStyle.Primary" />
+    </RadzenStack>
+</div>
+@code {
+    private string _firstname;
+    private string _lastname;
+    private bool _loginVkBusy = false;
+    private bool _registerDisabled;
+    private bool _registerBusy;
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private async void FirstnameChanged(string firstname)
+    {
+        _registerDisabled = string.IsNullOrWhiteSpace(firstname) || firstname.Length > 20;
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task Reg()
+    {
+        var login = await _client.RegisterAsGuest(_firstname, _lastname ?? string.Empty);
+        await _client.SaveLogin(login);
+        _dialogService.Close(new object());
+    }
+
+    private async Task Vk()
+    {
+        try
+        {
+            _loginVkBusy = true;
+            await InvokeAsync(() => StateHasChanged());
+
+            var response = await _client.Vk($"/lobby?id={Id}");
+            _nav.NavigateTo(response.Url);
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _loginVkBusy = false;
+            await InvokeAsync(() => StateHasChanged());
+        }
+
+    }
+}

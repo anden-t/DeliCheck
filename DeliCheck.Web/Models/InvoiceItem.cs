@@ -1,5 +1,6 @@
-﻿using DeliCheck.Schemas.Responses;
-using System.Text.Json.Serialization;
+﻿using DeliCheck.Schemas;
+using DeliCheck.Schemas.Responses;
+using DeliCheck.Schemas.SignalR;
 
 namespace DeliCheck.Web.Models
 {
@@ -8,35 +9,32 @@ namespace DeliCheck.Web.Models
         /// <summary>
         /// Идентификатор 
         /// </summary>
-        [JsonPropertyName("id")]
         public int Id { get; set; }
         /// <summary>
         /// Название позиции
         /// </summary>
-        [JsonPropertyName("name")]
         public string Name { get; set; }
         /// <summary>
         /// Количество в позиции
         /// </summary>
-        [JsonPropertyName("count")]
         public decimal Count { get; set; }
         /// <summary>
         /// Стоимость всей позиции (всего количества)
         /// </summary>
-        [JsonPropertyName("cost")]
         public int Cost { get; set; }
+        /// <summary>
+        /// Мера количества
+        /// </summary>
+        public ItemQuantityMeasure QuantityMeasure { get; set; }
 
         public bool IsEditingName { get; set; }
         public bool IsEditingCost { get; set; }
-        //public bool IsEditingCount { get; set; }
 
         public string EditedName { get; set; }
         public int EditedCost { get; set; }
-        //public decimal EditedCount { get; set; }
 
         public bool EnableToSaveName { get; set; }
         public bool EnableToSaveCost { get; set; }
-       // public bool EnableToSaveCount { get; set; }
 
         public bool SavingName { get; set; }
         public bool SavingCost { get; set; }
@@ -62,7 +60,21 @@ namespace DeliCheck.Web.Models
                 Id = model.Id,
                 Name = model.Name,
                 Count = model.Quantity,
+                QuantityMeasure = model.QuantityMeasure,
                 Cost = (int)Math.Round(model.Cost),
+            };
+        }
+
+        public static InvoiceItem FromModel(SplittingItem model, List<Friend> users)
+        {
+            return new InvoiceItem()
+            {
+                Id = model.Id,
+                Name = model.Name,
+                Count = model.Quantity,
+                QuantityMeasure = model.QuantityMeasure,
+                Cost = (int)Math.Round(model.Cost),
+                UsersParts = new Dictionary<Friend, int>(model.UserParts.Select(x => new KeyValuePair<Friend, int>(users.FirstOrDefault(c => x.Key == c.UserId), x.Value)))
             };
         }
 
@@ -72,6 +84,7 @@ namespace DeliCheck.Web.Models
     public static class InvoiceItemExtenstions
     {
         public static InvoiceItem FromModel(this InvoiceItemResponseModel model) => InvoiceItem.FromModel(model);
+        public static InvoiceItem FromModel(this SplittingItem model, List<Friend> users) => InvoiceItem.FromModel(model, users);
         public static List<InvoiceItem> FromList(this List<InvoiceItemResponseModel> list) => InvoiceItem.FromList(list);
     }
 }

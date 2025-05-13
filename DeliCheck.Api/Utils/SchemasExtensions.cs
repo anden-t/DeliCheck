@@ -74,6 +74,8 @@ namespace DeliCheck.Utils
                 Name = model.Name,
                 OCRText = model.OCRText,
                 TotalCost = model.TotalCost,
+                EditingFinished = model.EditingFinished,
+                SplitType = model.SplitType,
                 OwnerId = model.OwnerId
             };
         }
@@ -84,7 +86,7 @@ namespace DeliCheck.Utils
         /// <param name="model">Модель</param>
         /// <param name="self">Свой профиль или нет</param>
         /// <returns></returns>
-        public static ProfileResponseModel ToProfileResponseModel(this UserModel model)
+        public static ProfileResponseModel ToProfileResponseModel(this UserModel model, IConfiguration configuration)
         {
             return new ProfileResponseModel()
             {
@@ -96,6 +98,7 @@ namespace DeliCheck.Utils
                 Id = model.Id,
                 Username = model.Username,
                 VkId = model.VkId,
+                AvatarUrl = model.HasAvatar ? $"https://{configuration["Domain"]}/avatars/user?userId={model.Id}" : $"https://{configuration["Domain"]}/avatars/default",
             };
         }
 

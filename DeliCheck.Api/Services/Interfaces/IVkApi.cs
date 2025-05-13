@@ -10,7 +10,9 @@ namespace DeliCheck.Services
         Task UpdateFriendsListAsync(VkAuthorizationData authData);
 
         string GetVkAuthUrl(string codeChallenge, string state);
+        string GetVkAuthUrl(string codeChallenge, string state, string returnUrl);
         string GetConnectVkAuthUrl(string codeChallenge, string state);
+        string GetConnectVkAuthUrl(string codeChallenge, string state, string returnUrl);
         string GetState();
         string GetCodeVerifier();
         string GetCodeChallenge(string codeVerifier);

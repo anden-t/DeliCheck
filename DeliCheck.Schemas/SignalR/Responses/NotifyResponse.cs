@@ -5,29 +5,35 @@ namespace DeliCheck.Schemas.SignalR.Responses
     /// <summary>
     /// Сообщение SignalR об ошибке
     /// </summary>
-    public class ErrorResponse
+    public class NotifyResponse
     {
         /// <summary>
         /// Имя метода
         /// </summary>
-        public const string MethodName = "Error";
+        public const string MethodName = "Notify";
         /// <summary>
         /// Уровень ошибки
         /// </summary>
         [JsonPropertyName("level")]
-        public ErrorLevel Level { get; set; }
+        public NotifyLevel Level { get; set; }
         /// <summary>
         /// Текст сообщения
         /// </summary>
-        [JsonPropertyName("message")]
-        public string Message { get; set; }
+        [JsonPropertyName("detail")]
+        public string Detail { get; set; }
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; }
     }
 
     /// <summary>
     /// Уровень ошибки
     /// </summary>
-    public enum ErrorLevel
+    public enum NotifyLevel
     {
+        /// <summary>
+        /// Успех
+        /// </summary>
+        Success,
         /// <summary>
         /// Информация
         /// </summary>
