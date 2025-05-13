@@ -83,7 +83,7 @@ namespace DeliCheck.Api.Services.Implementaions
             decimal itemsSum = itemsPattern1.Sum(x => x.Cost);
             totalCost = itemsSum;
 
-            return (new InvoiceModel() { Name = "Чек", TotalCost = totalCost, OCRText = text, CreatedTime = DateTime.UtcNow }, items);
+            return (new InvoiceModel() { Name = "Чек", TotalCost = totalCost, OcrText = text, CreatedTime = DateTime.UtcNow }, items);
         }
 
         private static InvoiceItemModel? Pattern1Selector(Match x)

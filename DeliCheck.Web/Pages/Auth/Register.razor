@@ -54,13 +54,6 @@
 
             <RadzenButton class="rz-mb-0 my-button" @bind-Disabled=@_registerDisabled IsBusy=@_registerBusy BusyText="Регистрируемся..." Click=@Reg Text="Зарегистрироваться" ButtonStyle="ButtonStyle.Primary" />
 
-            <div class="rz-my-2" style="display: flex; justify-content: center; align-items: center;">
-                <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
-                <RadzenText style="font-size: 0.8rem" class="rz-mx-4 rz-my-0">или</RadzenText>
-                <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
-            </div>
-            <RadzenButton class="rz-mb-3 my-button" Text="Войти с VK" ButtonStyle="ButtonStyle.Primary" />
-
         </RadzenStack>
 
         <RadzenText class="rz-mb-0" TextAlign="TextAlign.Center">Есть аккаунт? <RadzenLink Path="/auth/login" Text="Войти" /></RadzenText>

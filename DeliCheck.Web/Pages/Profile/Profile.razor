@@ -3,6 +3,7 @@
 @using DeliCheck.Schemas.Responses
 @using System.Text.Json
 @inject DeliCheckClient _client
+@inject NavigationManager _nav
 @inject NotificationService _notify
 @inject DialogService _dialogService
 
@@ -19,7 +20,9 @@
             <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="padding-right: 0.5rem;">
 
                 <RadzenImage @bind-Path="@_profileAvatarUrl" class="rounded-image" Style="width: 100%; height: auto; max-width: 150px; min-width: 2rem;" />
-                <RadzenButton class="my-button" Text="Изменить аватар" Click="@OpenEditAvatar"></RadzenButton>
+                <RadzenButton Visible="@(_selfProfile)" class="my-button" Text="Изменить аватар" Click="@OpenEditAvatar"></RadzenButton>
+                <RadzenButton Visible="@(_selfProfile && _hasVk)" class="my-button" Text="Открыть профиль ВК" Click="@OpenVk" Image="/images/vk.svg"></RadzenButton>
+                <RadzenButton Visible="@(_selfProfile && !_hasVk)" class="my-button" Text="Подключить профиль ВК" Click="@ConnectVk" Image="/images/vk.svg"></RadzenButton>
 
             </RadzenStack>
 
@@ -39,7 +42,7 @@
                         </ChildContent>
                         <End>
                             <RadzenButton Disabled="@(!_firstnameEnableToSave)" IsBusy=@_firstnameSaving @bind-Visible="_firstnameEditing" Icon="save" Click="SaveEditFirstname" Variant="Variant.Text" Size="ButtonSize.Small" />
-                            <RadzenButton Icon="@(_firstnameEditing ? "close" : "edit")" Click="ToggleEditFirstname" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Visible="@(_selfProfile)" Icon="@(_firstnameEditing ? "close" : "edit")" Click="ToggleEditFirstname" Variant="Variant.Text" Size="ButtonSize.Small" />
                         </End>
                     </RadzenFormField>
                 </div>
@@ -51,7 +54,7 @@
                         </ChildContent>
                         <End>
                             <RadzenButton Disabled="@(!_lastnameEnableToSave)" IsBusy=@_lastnameSaving @bind-Visible="_lastnameEditing" Icon="save" Click="SaveEditLastname" Variant="Variant.Text" Size="ButtonSize.Small" />
-                            <RadzenButton Icon="@(_lastnameEditing ? "close" : "edit")" Click="ToggleEditLastname" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Visible="@(_selfProfile)" Icon="@(_lastnameEditing ? "close" : "edit")" Click="ToggleEditLastname" Variant="Variant.Text" Size="ButtonSize.Small" />
                         </End>
                     </RadzenFormField>
                 </div>
@@ -63,7 +66,7 @@
                         </ChildContent>
                         <End>
                             <RadzenButton Disabled="@(!_emailEnableToSave)" IsBusy=@_emailSaving @bind-Visible="_emailEditing" Icon="save" Click="SaveEditEmail" Variant="Variant.Text" Size="ButtonSize.Small" />
-                            <RadzenButton Icon="@(_emailEditing ? "close" : "edit")" Click="ToggleEditEmail" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Visible="@(_selfProfile)" Icon="@(_emailEditing ? "close" : "edit")" Click="ToggleEditEmail" Variant="Variant.Text" Size="ButtonSize.Small" />
                         </End>
                     </RadzenFormField>
                 </div>
@@ -75,7 +78,7 @@
                         </ChildContent>
                         <End>
                             <RadzenButton Disabled="@(!_phoneEnableToSave)" IsBusy=@_phoneSaving @bind-Visible="_phoneEditing" Icon="save" Click="SaveEditPhone" Variant="Variant.Text" Size="ButtonSize.Small" />
-                            <RadzenButton Icon="@(_phoneEditing ? "close" : "edit")" Click="ToggleEditPhone" Variant="Variant.Text" Size="ButtonSize.Small" />
+                            <RadzenButton Visible="@(_selfProfile)" Icon="@(_phoneEditing ? "close" : "edit")" Click="ToggleEditPhone" Variant="Variant.Text" Size="ButtonSize.Small" />
                         </End>
                     </RadzenFormField>
                 </div>
@@ -89,6 +92,11 @@
 <AuthRedirect/>
 
 @code {
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? Id { get; set; }
+
     private ProfileResponseModel? _profile;
 
     private string _profileAvatarUrl;
@@ -113,6 +121,8 @@
     private string _phoneEdited;
     private bool _phoneSaving;
 
+    private bool _selfProfile;
+    private bool _hasVk;
 
     protected override async Task OnInitializedAsync()
     {
@@ -121,10 +131,16 @@
         if (!await _client.IsAuthenticated())
             return;
 
-        _profile = await _client.GetProfile();
+        if (Id == null || !int.TryParse(Id, out int id))
+            _profile = await _client.GetProfile();
+        else
+            _profile = await _client.GetProfile(id);
 
         if (_profile == null)
             return;
+
+        _selfProfile = _profile.Id == (await _client.GetProfile()).Id;
+        _hasVk = _profile.VkId != null;
 
         _profileAvatarUrl = _profile.AvatarUrl;
         _firstnameEdited = _profile.Firstname;
@@ -250,6 +266,23 @@
         catch (ApiException ex)
         {
             _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+    }
+
+    public async Task ConnectVk()
+    {
+        if (_selfProfile)
+        {
+            var url = await _client.VkConnect();
+            _nav.NavigateTo(url.Url);
+        }
+    }
+
+    public void OpenVk()
+    {
+        if(_profile != null && _profile.VkId != null)
+        {
+            _nav.NavigateTo($"https://vk.com/id{_profile.VkId}");
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿@page "/auth/vk"
+﻿@page "/auth/vk-connect"
 
 @using Blazorise.LottieAnimation
 
@@ -6,7 +6,7 @@
 @inject NavigationManager _nav
 @inject NotificationService _notify
 
-<PageTitle>ДелиЧек — Авторизация</PageTitle>
+<PageTitle>ДелиЧек — Подключение ВК</PageTitle>
 
 <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
     <div class="rz-shadow-2 rz-border-radius-2 rz-mb-1 card" style="padding: 2rem; max-width: 350px;">
@@ -50,17 +50,18 @@
 
         try
         {
-            var response = await _client.VkCallback(Code, State, DeviceId);
-            await _client.SaveLogin(response);
+            await _client.VkConnectCallback(Code, State, DeviceId);
 
             if (!string.IsNullOrWhiteSpace(ReturnUrl))
                 _nav.NavigateTo(ReturnUrl);
             else
-                _nav.NavigateTo("/");
+                _nav.NavigateTo("/profile");
         }
         catch (ApiException ex)
         {
             _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+            _nav.NavigateTo("/profile");
         }
     }
+
 }

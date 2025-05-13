@@ -1,4 +1,6 @@
-﻿namespace DeliCheck.Services
+﻿using DeliCheck.Api.Models;
+
+namespace DeliCheck.Services
 {
     /// <summary>
     /// Интерфейс для сервиса распознования текста
@@ -10,6 +12,6 @@
         /// </summary>
         /// <param name="image">Изображение</param>
         /// <returns>Текст с изображения</returns>
-        Task<string?> GetTextFromImageAsync(string imagePath);
+        Task<OcrResult> GetTextFromImageAsync(string imagePath);
     }
 }

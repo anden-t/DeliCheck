@@ -20,7 +20,7 @@
 <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
     <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
         <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Разделить чек</RadzenText>
-        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Выберите людей, с которыми хотите разделить чек</RadzenText>
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Нажимайте на свой аватар, чтобы выбрать позицию</RadzenText>
         <RadzenStack Orientation="Orientation.Vertical" Gap="0">
             <RadzenStack class="rz-mb-1" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText class="rz-mb-0" TextAlign="TextAlign.Left" TextStyle="TextStyle.H6" style="font-weight: 600;">Список позиций</RadzenText>
@@ -31,44 +31,27 @@
                 <Template Context="item">
                     <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch">
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenFormField Text="Название" Style="width: 100%; margin-right: 0.5rem">
-                                <ChildContent>
-                                    <RadzenTextBox Disabled="@(!item.IsEditingName)" Value="@(item.Name)" aria-label="Название" />
-                                </ChildContent>
-                            </RadzenFormField>
-
-                            <RadzenFormField Text="@($"Цена за {(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())} {item.QuantityMeasure.ToShortString()}.")" style="@((item.IsEditingCost ? "max-width: 9rem" : "max-width: 7rem") + ";width:100%")">
-                                <ChildContent>
-                                    <RadzenNumeric TValue="int" ShowUpDown="false" Disabled="true" Value="@(item.Cost)" Format="# ₽" aria-label="Цена" />
-                                </ChildContent>
-                            </RadzenFormField>
-
-                            <RadzenFormField Text="Количество" style="max-width: 7rem; width:100%">
-                                <ChildContent>
-                                    <RadzenNumeric TValue="decimal" ShowUpDown="false" Disabled="true" Value="@(item.Count)" Format="@($"# {item.QuantityMeasure.ToShortString()}")" aria-label="@($"{item.QuantityMeasure.ToLongStringTitle()}")" />
-                                </ChildContent>
-                            </RadzenFormField>
+                            <RadzenText Text="@(item.Name)" TextAlign="TextAlign.Left" Style="font-weight: 600; width: 100%; margin-right: 0.5rem"/>
+                            <RadzenText Text="@($"{(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())} {item.QuantityMeasure.ToShortString()}.")" TextAlign="TextAlign.Left" Style="max-width: 3rem; width:100%; margin-right: 0.5rem" />
+                            <RadzenText Text="@($"{item.Cost} ₽")" TextAlign="TextAlign.Right" Style="font-weight: 600; max-width: 3rem; width:100%; " />
                         </RadzenStack>
 
-                        <div style="overflow-x: auto; height: 100px; overflow-y: hidden;">
-                            <div style="max-width: 1000px; height: 85px">
-                                <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 1000px; height: 85px"
+                        <div style="overflow-x: auto; height: 85px; overflow-y: hidden;">
+                            <div style="max-width: 1000px; height: 70px">
+                                <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 1000px; height: 70px"
                                 TItem="Friend" AllowVirtualization="false" WrapItems="true" AllowPaging="false" Data="@_selected">
 
                                     <Template Context="user">
-                                        <div class="rz-shadow-2" style="cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 90px; width: 90px; max-width: 90px; height: 80px; margin-top: 5px" item="true" @onclick="@((s) => OnClickUser(item, user))">
+                                        <div class="rz-shadow-2" style="@($"{(user.Finished ? "background: var(--rz-success-lighter);" : (user.UserId == _myUserId ? "" : "background: var(--rz-base-light);"))}; transition: all 150ms ease-in-out; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 74px; width: 74px; max-width: 74px; height: 72px; margin-top: 5px")" item="true" @onclick="@((s) => OnClickUser(item, user))">
 
-
-                                            <div class="@(item.UsersParts[user] == 0 ? "rz-shadow-2" : "rz-background-color-primary")" style="transition: all 150ms ease-in-out; position: absolute; top: -5px; left:70px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px">
-                                                <RadzenText class="rz-mb-0" Style="@($"{(item.UsersParts[user] == 0 ? "" : "color: var(--rz-on-primary);")} min-width: 16px; width: 16px; text-align: center; font-size: 0.8rem; font-weight: 600")" Text="@($"x{(item.UsersParts[user])}")" />
+                                            <div class="rz-shadow-2" style=@($"{((item.UsersParts[user] == 0) ? "" : (user.UserId == _myUserId ? "background: var(--rz-primary);" : "background: var(--rz-base);"))} transition: all 150ms ease-in-out; position: absolute; top: -5px; left:59px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px")>
+                                                <RadzenText class="rz-mb-0" Style="@($"{(item.UsersParts[user] == 0 ? "" : (user.UserId == _myUserId ? "color: var(--rz-on-primary);" : "color: var(--rz-black);"))} min-width: 16px; width: 16px; text-align: center; font-size: 0.8rem; font-weight: 600")" Text="@($"x{(item.UsersParts[user])}")" />
                                             </div>
 
                                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                                                <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 3rem; height: 3rem;" />
-                                                <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 84px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
+                                                <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 2.8rem; height: 2.8rem;" />
+                                                <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 69px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
                                             </RadzenStack>
-
-
                                         </div>
                                     </Template>
                                 </RadzenDataList>
@@ -80,10 +63,12 @@
             </RadzenDataList>
         </RadzenStack>
         <div style="width: 100%; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
-        <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textTotal"></RadzenText>
-        <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textMy"></RadzenText>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+            <RadzenText class="rz-my-3" TextAlign="TextAlign.Left" Style="font-weight: 600; width: 100%; margin-right: 0.5rem " Text="@_textMy"></RadzenText>
+            <RadzenText class="rz-my-3" TextAlign="TextAlign.Right" Style="font-weight: 600; width: 100%;" Text="@_textTotal"></RadzenText>
+        </RadzenStack>
 
-        <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Разделяем..." Text=@_submitButtonText Click="@CreateBills"></RadzenButton>
+        <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Завершаем..." ButtonStyle=@_submitButtonStyle Text=@_submitButtonText Click="@CreateBills"></RadzenButton>
     </div>
 
 </RadzenStack>
@@ -105,7 +90,7 @@
     div[list=items] > .rz-datalist-data > li {
     border-width: 1px 0px 0px 0px;
     border-radius: 0px;
-    padding: 1rem 0px;
+    padding: 0.5rem 0px;
     }
 
     div[list=users] > .rz-g {
@@ -136,6 +121,7 @@
     private string _textTotal;
     private string _textMy;
     private string _submitButtonText;
+    private ButtonStyle _submitButtonStyle;
 
     [Parameter]
     [SupplyParameterFromQuery(Name = "id")]
@@ -201,6 +187,7 @@
         else
             _submitButtonText = "Я выбрал все свои позиции!";
 
+        _submitButtonStyle = ButtonStyle.Primary;
 
         hubConnection = new HubConnectionBuilder()
             .WithUrl(Program.AppUrl + "lobby-hub")
@@ -211,12 +198,49 @@
             try
             {
                 var selected = response.SplittingModel.Users.Select(x => { var f = x.FromModel(); f.Finished = response.SplittingModel.FinishedUsers.Contains(f.UserId.Value); return f; }).ToList();
-                _selected = selected;
+
+                _selected ??= new List<Friend>();
+                var toRemove = new List<Friend>();
+                foreach (var s in _selected)
+                    if (!selected.Contains(s))
+                        toRemove.Add(s);
+
+                toRemove.ForEach(x => _selected.Remove(x));
+
+                foreach (var s in selected)
+                    if (!_selected.Contains(s))
+                        _selected.Add(s);
+
+                var myUser = _selected.FirstOrDefault(x => x.UserId == _myUserId);
+                if (myUser != null)
+                {
+                    var index = _selected.IndexOf(myUser);
+                    if (index != 0)
+                    {
+                        _selected.Remove(myUser);
+                        _selected.Insert(0, myUser);
+                    }
+                }
+
+                foreach (var s in _selected)
+                    s.Finished = selected.FirstOrDefault(x => x.UserId == s.UserId)?.Finished ?? false;    
 
                 var items = response.SplittingModel.Items.Select(x => x.FromModel(_selected)).ToList();
-                _items = items.AsQueryable<InvoiceItem>();
-                Console.WriteLine(_selected.Count);
-                Console.WriteLine(_items.Count());
+
+                if(items != null)
+                {
+                    if(_items == null || _items.Count() == 0)
+                    {
+                        _items = items.AsQueryable<InvoiceItem>();
+                    }
+                    else
+                    {
+                        foreach (var item in _items)
+                            if(items.Any(x => x.Id == item.Id))
+                                item.UsersParts = items.First(x => x.Id == item.Id).UsersParts;
+                    }
+                }
+
                 int mySum = 0;
                 response.SplittingModel.UsersSum.TryGetValue(_myUserId, out mySum);
 
@@ -226,7 +250,21 @@
                 if (_invoice.OwnerId == _myUserId)
                     _processAllowed = _selected.Count > 1 && _selected.Where(x => x.UserId != _myUserId).All(x => x.Finished);
                 else
-                    _processAllowed = _items.Any(x => x.UsersParts.Any(x => x.Key.UserId == _myUserId && x.Value > 0));
+                {
+                    if (_selected.Any(x => x.UserId == _myUserId && x.Finished))
+                    {
+                        _submitButtonText = "Забыл кое-что выбрать...";
+                        _submitButtonStyle = ButtonStyle.Base;
+                    }
+                    else
+                    {
+                        _submitButtonText = "Я выбрал все свои позиции!";
+                        _submitButtonStyle = ButtonStyle.Primary;
+                    }
+
+                    _processAllowed = _selected.Any(x => x.UserId == _myUserId && x.Finished) || _items.Any(x => x.UsersParts.Any(x => x.Key.UserId == _myUserId && x.Value > 0));
+                        
+                 }
             }
             catch (Exception ex)
             {
@@ -288,20 +326,21 @@
     {
         try
         {
-            if (user.UserId == _myUserId)
+            if (user.UserId == _myUserId && _selected.Any(x => x.UserId == _myUserId && !x.Finished))
             {
-                var part = item.UsersParts[user];
+                var part = item.UsersParts.FirstOrDefault(x => x.Key.UserId == _myUserId).Value;
+                var key = item.UsersParts.FirstOrDefault(x => x.Key.UserId == _myUserId).Key;
                 if (item.Count % 1 == 0 && item.Count != 1)
                 {
                     var max = item.Count;
                     var sum = item.UsersParts.Where(x => x.Key.UserId != _myUserId).Sum(x => x.Value);
-                    if (++part + sum > max) item.UsersParts[user] = 0;
-                    else item.UsersParts[user]++;
+                    if (++part + sum > max) item.UsersParts[key] = 0;
+                    else item.UsersParts[key]++;
                 }
                 else
                 {
-                    if (part == 1) item.UsersParts[user] = 0;
-                    else item.UsersParts[user] = 1;
+                    if (part == 1) item.UsersParts[key] = 0;
+                    else item.UsersParts[key] = 1;
                 }
 
                 await InvokeAsync(StateHasChanged);
@@ -328,16 +367,24 @@
 
             if (_invoice.OwnerId != _myUserId)
             {
-                if (hubConnection != null)
+                var myUser = _selected.FirstOrDefault(x => x.UserId == _myUserId);
+                if(myUser != null && hubConnection != null)
                 {
-                    await hubConnection.SendAsync(ChangeUserFinishedRequest.MethodName, new ChangeUserFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                    if(!myUser.Finished)
+                    {
+                        await hubConnection.SendAsync(UserFinishedRequest.MethodName, new UserFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                    }
+                    else
+                    {
+                        await hubConnection.SendAsync(UserNotFinishedRequest.MethodName, new UserNotFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                    }
                 }
             }
             else
             {
                 if (hubConnection != null)
                 {
-                    await hubConnection.SendAsync(ChangeUserFinishedRequest.MethodName, new ChangeUserFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
+                    await hubConnection.SendAsync(UserFinishedRequest.MethodName, new UserFinishedRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
                     await hubConnection.SendAsync(FinishRequest.MethodName, new FinishRequest() { InvoiceId = _invoiceId, SessionToken = await GetSessionTokenAsync() });
                 }
             }

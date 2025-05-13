@@ -84,6 +84,7 @@ namespace DeliCheck.Api.Hubs
             }
 
             splitting.Join(token.UserId, Context.ConnectionId);
+            await Clients.Caller.SendAsync(ActualInvoiceSplittingResponse.MethodName, new ActualInvoiceSplittingResponse() { SplittingModel = splitting.CurrentState });
         }
 
         [HubMethodName(LeaveRequest.MethodName)]
@@ -126,8 +127,8 @@ namespace DeliCheck.Api.Hubs
             splitting.SelectItem(token.UserId, request.ItemId, Context.ConnectionId);
         }
 
-        [HubMethodName(ChangeUserFinishedRequest.MethodName)]
-        public async Task ChangeUserFinished(SelectItemRequest request)
+        [HubMethodName(UserFinishedRequest.MethodName)]
+        public async Task UserFinished(UserFinishedRequest request)
         {
             var token = _authService.GetSessionTokenByString(request.SessionToken);
             if (token == null)
@@ -143,7 +144,27 @@ namespace DeliCheck.Api.Hubs
                 return;
             }
 
-            splitting.ChangeUserFinished(token.UserId, Context.ConnectionId);
+            splitting.UserFinished(token.UserId, Context.ConnectionId);
+        }
+
+        [HubMethodName(UserNotFinishedRequest.MethodName)]
+        public async Task UserNotFinished(UserNotFinishedRequest request)
+        {
+            var token = _authService.GetSessionTokenByString(request.SessionToken);
+            if (token == null)
+            {
+                await Clients.Caller.SendAsync(NotifyResponse.MethodName, new NotifyResponse() { Level = NotifyLevel.Error, Summary = "Ошибка", Detail = Constants.Unauthorized });
+                return;
+            }
+
+            var splitting = _splittings.FirstOrDefault(x => x.InvoiceId == request.InvoiceId);
+            if (splitting == null)
+            {
+                await Clients.Caller.SendAsync(NotifyResponse.MethodName, new NotifyResponse() { Level = NotifyLevel.Error, Summary = "Ошибка", Detail = "Лобби для чека с таким ID не найдено" });
+                return;
+            }
+
+            splitting.UserNotFinished(token.UserId, Context.ConnectionId);
         }
 
         [HubMethodName(FinishRequest.MethodName)]

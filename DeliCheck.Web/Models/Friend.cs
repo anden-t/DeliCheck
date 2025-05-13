@@ -46,8 +46,28 @@ namespace DeliCheck.Web.Models
         public bool Finished { get; set; }
         public bool Selected { get; set; }
 
-        public static bool operator ==(Friend f1, Friend f2) => f1.HasProfile ? (f1.UserId == f2.UserId) : (f1.FriendLabelId == f2.FriendLabelId);
-        public static bool operator !=(Friend f1, Friend f2) => !(f1.HasProfile ? (f1.UserId == f2.UserId) : (f1.FriendLabelId == f2.FriendLabelId));
+        public static bool operator ==(Friend? f1, Friend? f2) 
+        {
+            if (ReferenceEquals(f1, f2))
+                return true;
+            if (ReferenceEquals(f1, null) && !ReferenceEquals(f2, null))
+                return false;
+            if (!ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
+                return false;
+
+            return (f1?.HasProfile ?? false) ? (f1?.UserId == f2?.UserId) : (f1?.FriendLabelId == f2?.FriendLabelId);
+        }
+        public static bool operator !=(Friend? f1, Friend? f2)
+        {
+            if (ReferenceEquals(f1, f2))
+                return false;
+            if (ReferenceEquals(f1, null) && !ReferenceEquals(f2, null))
+                return true;
+            if (!ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
+                return true;
+
+            return !((f1?.HasProfile ?? false) ? (f1?.UserId == f2?.UserId) : (f1?.FriendLabelId == f2?.FriendLabelId));
+        }
 
         public override bool Equals(object? obj)
         {

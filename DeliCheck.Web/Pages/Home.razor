@@ -25,8 +25,8 @@
         Paused=@_animPaused
         style="aspect-ratio: 1; width: 100%; max-width: 200px; margin-inline: auto; margin-bottom: 1rem;"></LottieAnimation>
 
-        <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-1">
-            <RadzenButton class="my-button rz-mb-1" @bind-IsBusy=@_isBusyOcr BusyText="Распознаем позиции..." Text="Загрузить чек" Click="@OpenFileUpload" Image="/images/camera.svg" />
+        <RadzenStack Orientation="Orientation.Vertical" Gap="0" class="rz-mb-2">
+            <RadzenButton class="my-button rz-mb-3" @bind-IsBusy=@_isBusyOcr BusyText="Распознаем позиции..." Text="Загрузить чек" Click="@OpenFileUpload" Image="/images/camera.svg" />
             <RadzenButton class="my-button" @bind-IsBusy=@_isBusyQr BusyText="Распознаем позиции..." Text="Сканировать QR-код" Click="@QrCodeScanningStart" Image="/images/qrcode-scan.svg"/>
         </RadzenStack>
 
@@ -50,7 +50,7 @@
 
     public async void QrCodeScanningStart()
     {
-        var type = await _dialog.OpenAsync<SplitTypeDialog>("Выберите тип деления чека",
+        var type = await _dialog.OpenAsync<SplitTypeDialog>("Как будем делить чек?",
             options: new DialogOptions()
                 {
                     Resizable = false,
@@ -98,7 +98,7 @@
 
     public async void OpenFileUpload()
     {
-        var type = await _dialog.OpenAsync<SplitTypeDialog>("Выберите тип деления чека",
+        var type = await _dialog.OpenAsync<SplitTypeDialog>("Как будем делить чек?",
             options: new DialogOptions()
                 {
                     Resizable = false,
@@ -126,6 +126,11 @@
         try
         {
             var invoice = await _client.InvoiceOcr(res, type.Type);
+            if(invoice.OcrEngine == "tesseract")
+            {
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "API OCR сейчас недоступен", Detail = "Чек был распознан с помощью локального OCR, результаты могут быть неточными. Попробуйте снова через несколько минут.", Duration = 20000 });
+            }
+
             if (type.Type == InvoiceSplitType.ByOwner)
                 _nav.NavigateTo($"/deli?id={invoice.Id}");
             else

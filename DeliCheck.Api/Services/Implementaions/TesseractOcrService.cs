@@ -1,4 +1,5 @@
 ﻿
+using DeliCheck.Api.Models;
 using System.Diagnostics;
 using System.Text;
 
@@ -20,7 +21,7 @@ namespace DeliCheck.Services
         /// </summary>
         /// <param name="imagePath">Путь к изображению</param>
         /// <returns></returns>
-        public async Task<string?> GetTextFromImageAsync(string imagePath)
+        public async Task<OcrResult> GetTextFromImageAsync(string imagePath)
         {
             using var process = new Process();
             process.StartInfo = new ProcessStartInfo()
@@ -36,7 +37,7 @@ namespace DeliCheck.Services
 
             process.Start();
             process.WaitForExit();
-            return process.StandardOutput.ReadToEnd();
+            return new OcrResult() { OcrEngine = "tesseract", Text = process.StandardOutput.ReadToEnd() };
         }
     }
 }

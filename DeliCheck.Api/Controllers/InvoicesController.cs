@@ -86,17 +86,17 @@ namespace DeliCheck.Controllers
                     _logger.LogWarning($"Ошибка при распознавании QR-кода или получении данных с ФНС: {ex.GetType().Name} {ex.Message} {ex.StackTrace} {ex.InnerException?.GetType()?.Name ?? ""} {ex.InnerException?.Message ?? ""}");
                 }
 
-
+                var ocrEngine = string.Empty;
                 if (!parsed)
                 {
                     fs.Position = 0;
                     var preprocessedPath = await _preprocessingService.PreprocessImageAsync(fs, x1, y1, x2, y2);
                     var text = await _ocrService.GetTextFromImageAsync(preprocessedPath);
-
-                    if (string.IsNullOrWhiteSpace(text))
+                    ocrEngine = text.OcrEngine;
+                    if (!text.Completed)
                         return BadRequest(ApiResponse.Failure("Не удалось распознать чек. Попробуйте сфотографировать еще раз!"));
 
-                    (invoice, items) = _parsingService.GetInvoiceModelFromText(text);
+                    (invoice, items) = _parsingService.GetInvoiceModelFromText(text.Text);
 
                     if (invoice.TotalCost == 0 && items.Count == 0)
                         return BadRequest(ApiResponse.Failure("Не удалось распознать чек. Попробуйте сфотографировать еще раз!"));
@@ -109,6 +109,7 @@ namespace DeliCheck.Controllers
                         invoice.OwnerId = token.UserId;
                         invoice.CreatedTime = DateTime.UtcNow;
                         invoice.SplitType = splitType;
+                        invoice.OcrEngine = ocrEngine;
                         db.Invoices.Add(invoice);
                         await db.SaveChangesAsync();
 
@@ -168,6 +169,8 @@ namespace DeliCheck.Controllers
                         invoice.OwnerId = token.UserId;
                         invoice.CreatedTime = DateTime.UtcNow;
                         invoice.SplitType = splitType;
+                        invoice.OcrEngine = string.Empty;
+                        invoice.OcrText = string.Empty;
                         db.Invoices.Add(invoice);
                         await db.SaveChangesAsync();
 

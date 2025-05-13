@@ -134,7 +134,7 @@ namespace DeliCheck.Api.Splitting
             StateChanged?.Invoke(this, new SplittingStateChangedEventArgs(CurrentState));
         }
 
-        public void ChangeUserFinished(int userId, string connectionId)
+        public void UserFinished(int userId, string connectionId)
         {
             lock (CurrentState)
             {
@@ -142,10 +142,22 @@ namespace DeliCheck.Api.Splitting
                 if (user == null)
                     Join(userId, connectionId);
 
-                if(CurrentState.FinishedUsers.Contains(userId))
-                    CurrentState.FinishedUsers.Remove(userId);
-                else 
+                if(!CurrentState.FinishedUsers.Contains(userId))
                     CurrentState.FinishedUsers.Add(userId);
+            }
+            StateChanged?.Invoke(this, new SplittingStateChangedEventArgs(CurrentState));
+        }
+
+        public void UserNotFinished(int userId, string connectionId)
+        {
+            lock (CurrentState)
+            {
+                var user = CurrentState.Users.FirstOrDefault(x => x.Id == userId);
+                if (user == null)
+                    Join(userId, connectionId);
+
+                if (CurrentState.FinishedUsers.Contains(userId))
+                    CurrentState.FinishedUsers.Remove(userId);
             }
             StateChanged?.Invoke(this, new SplittingStateChangedEventArgs(CurrentState));
         }

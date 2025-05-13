@@ -41,12 +41,17 @@ namespace DeliCheck.Schemas.Responses
         /// Отсанированный чек. Пустая строка, если распознано с помощью налоговой
         /// </summary>
         [JsonPropertyName("ocr_text")]
-        public string OCRText { get; set; }
+        public string OcrText { get; set; }
         /// <summary>
         /// Показывает, распознано ли с помощью налоговой. True - если да
         /// </summary>
         [JsonPropertyName("from_fns")]
         public bool FromFns { get; set; }
+        /// <summary>
+        /// Какой OCR использовался
+        /// </summary>
+        [JsonPropertyName("ocr_engine")]
+        public string OcrEngine { get; set; }
         /// <summary>
         /// Тип деления чека
         /// </summary>

@@ -35,7 +35,7 @@
                 <RadzenText style="font-size: 0.8rem" class="rz-mx-4 rz-my-0">или</RadzenText>
                 <div style="flex-grow: 2; border: var(--rz-datalist-item-border); border-width: 1px 0px 0px 0px; height: 1px; background: transparent;" />
             </div>
-            <RadzenButton IsBusy=_loginVkBusy BusyText="Входим..." Variant="Variant.Flat" class="rz-mb-3 my-button" Text="Войти с VK" Click=@Vk ButtonStyle="ButtonStyle.Primary" />
+            <RadzenButton IsBusy=_loginVkBusy BusyText="Входим..." Variant="Variant.Flat" class="rz-mb-3 my-button" Text="Войти с VK" Click=@Vk ButtonStyle="ButtonStyle.Primary" Image="/images/vk.svg"/>
 
             <RadzenText class="rz-mb-0" TextAlign="TextAlign.Center">Нет аккаунта? <RadzenLink Path="@($"/auth/register?returnUrl={returnUrl}")" Text="Зарегистрируйтесь" /></RadzenText>
 

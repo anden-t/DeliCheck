@@ -80,7 +80,7 @@ namespace DeliCheck.Services
                 {
                     Name = json["data"]["json"]["retailPlaceAddress"].GetValue<string>(),
                     FromFns = true,
-                    OCRText = string.Empty,
+                    OcrText = string.Empty,
                     TotalCost = json["data"]["json"]["totalSum"].GetValue<decimal>() / 100
                 };
 

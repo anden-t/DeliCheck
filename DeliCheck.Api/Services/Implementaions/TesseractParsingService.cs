@@ -96,7 +96,7 @@ namespace DeliCheck.Services
                 Name = "Позиция"
             });  
 
-            return (new InvoiceModel() { Name = "Чек", TotalCost = totalCost, OCRText = text, CreatedTime = DateTime.UtcNow }, items);
+            return (new InvoiceModel() { Name = "Чек", TotalCost = totalCost, OcrText = text, CreatedTime = DateTime.UtcNow }, items);
         }
     }
 }

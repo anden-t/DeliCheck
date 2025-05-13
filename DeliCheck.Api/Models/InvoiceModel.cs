@@ -30,7 +30,7 @@ namespace DeliCheck.Models
         /// <summary>
         /// Отсанированный чек. Пустая строка, если распознано с помощью налоговой
         /// </summary>
-        public string OCRText { get; set; }
+        public string OcrText { get; set; }
         /// <summary>
         /// Показывает, распознано ли с помощью налоговой. True - если да
         /// </summary>
@@ -39,6 +39,10 @@ namespace DeliCheck.Models
         /// Созданы ли счета по этому чеку. Если true, изменения чека больше недоступны. Может быть true, только если <see cref="EditingFinished"/> = true
         /// </summary>
         public bool BillsCreated { get; set; }
+        /// <summary>
+        /// Какой OCR использовался
+        /// </summary>
+        public string OcrEngine { get; set; }
         /// <summary>
         /// Завершено ли изменение чека. Когда true, изменения чека больше недоступны
         /// </summary>

@@ -51,7 +51,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddSignalR(options => 
 {
-    options.ClientTimeoutInterval = new TimeSpan(0, 0, 30);
+    options.ClientTimeoutInterval = new TimeSpan(0, 15, 0);
 });
 builder.WebHost.UseKestrel(options =>
 {

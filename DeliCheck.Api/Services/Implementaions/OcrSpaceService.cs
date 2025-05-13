@@ -1,4 +1,8 @@
-﻿using System.Text.Json.Nodes;
+﻿using DeliCheck.Api.Models;
+using System;
+using System.Diagnostics;
+using System.Text;
+using System.Text.Json.Nodes;
 
 namespace DeliCheck.Services
 {
@@ -10,16 +14,19 @@ namespace DeliCheck.Services
         private string _apiKey = "donotstealthiskey_ip1";
 
         private ILogger<OcrSpaceService> _logger;
-        public OcrSpaceService(ILogger<OcrSpaceService> logger)
+        private IConfiguration _configuration;
+        public OcrSpaceService(ILogger<OcrSpaceService> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
-        public async Task<string?> GetTextFromImageAsync(string imagePath)
+        public async Task<OcrResult> GetTextFromImageAsync(string imagePath)
         {
             try
             {
                 using (var httpClient = new HttpClient())
                 {
+                    httpClient.Timeout = new TimeSpan(0, 0, 25);
                     if (new FileInfo(imagePath).Length > 5 * 1024 * 1024) return null;
 
                     httpClient.DefaultRequestHeaders.Clear();
@@ -53,15 +60,38 @@ namespace DeliCheck.Services
 
                     if (json?["ParsedResults"]?[0]?["FileParseExitCode"]?.GetValue<int?>() == 1)
                     {
-                        return json["ParsedResults"]?[0]?["ParsedText"]?.GetValue<string?>();
+                        return new OcrResult() { Text = json["ParsedResults"]?[0]?["ParsedText"]?.GetValue<string?>(), OcrEngine = "ocr.space" };
                     }
-                    else return null;
+                    else return new OcrResult() { Text = null, OcrEngine = "ocr.space" };
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Ошибка при обращении к OCRSpace: {ex.GetType().Name} {ex.Message} {ex.StackTrace} {ex.InnerException?.GetType()?.Name ?? ""} {ex.InnerException?.Message ?? ""}");
-                return null;
+
+                try
+                {
+                    using var process = new Process();
+                    process.StartInfo = new ProcessStartInfo()
+                    {
+                        WorkingDirectory = Path.GetDirectoryName(_configuration["TesseractPath"]),
+                        FileName = _configuration["TesseractPath"],
+                        Arguments = $"\"{imagePath}\" - -l rus --psm 6",
+                        UseShellExecute = false,
+                        StandardOutputEncoding = Encoding.UTF8,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+
+                    process.Start();
+                    process.WaitForExit();
+                    return new OcrResult() { OcrEngine = "tesseract", Text = process.StandardOutput.ReadToEnd() };
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Ошибка при обращении к Tesseract: {e.GetType().Name} {e.Message} {e.StackTrace} {e.InnerException?.GetType()?.Name ?? ""} {e.InnerException?.Message ?? ""}");
+                    return new OcrResult() { OcrEngine = "tesseract", Text = null };
+                }
             }
         }
     }
