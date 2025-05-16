@@ -15,7 +15,7 @@
 <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
     <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
 
-        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Разделить чек</RadzenText>
+        <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Редактировать чек</RadzenText>
         <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Для начала отредактируйте чек, если требуются исправления</RadzenText>
 
 
@@ -26,8 +26,12 @@
                 <RadzenButton Icon="add" Click=@AddItem IsBusy=@_adding class="my-button" ButtonStyle="ButtonStyle.Primary" />
             </RadzenStack>
 
-
-            <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "items" })" Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:100%;margin-top:1rem;padding:0px;overflow-x:hidden" : "")"
+            <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                <RadzenText style="font-weight: 600; width: 100%; margin-right: 0.5rem" Text="Наименование" />
+                <RadzenText style="font-weight: 600; max-width: 4rem; width:100%;margin-right: 0.5rem" Text="Кол-во" />
+                <RadzenText style="font-weight: 600; max-width: 4rem; width:100%;margin-right: 44px" Text="Сумма" />
+            </RadzenStack>
+            <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "items" })" Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:100%;padding:0px;overflow-x:hidden" : "")"
             WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
             Data="@_items" TItem="InvoiceItem" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" IsLoading="@_isLoading">
 
@@ -36,56 +40,11 @@
                     <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch">
 
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenFormField Text="Название" Style="width: 100%; margin-right: 0.5rem">
-                                <ChildContent>
-                                    <RadzenTextBox Disabled="@(!item.IsEditingName)" @oninput="@((s) => OnInputName(item, s))" Value="@(item.Name)" aria-label="Название" />
-                                </ChildContent>
-                                <End>
-                                    <RadzenButton Disabled="@(!item.EnableToSaveName)" IsBusy=@item.SavingName @bind-Visible="item.IsEditingName" Click=@(() => SaveName(item)) Icon="save" Variant="Variant.Text" Size="ButtonSize.Small" />
-                                    <RadzenButton Icon="@(item.IsEditingName ? "close" : "edit")" Click="@(() => item.IsEditingName = !item.IsEditingName)" Variant="Variant.Text" Size="ButtonSize.Small" />
-                                </End>
-                            </RadzenFormField>
-
-                            <RadzenFormField Text="@($"Цена за {(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())}")" style="@((item.IsEditingCost ? "max-width: 9rem" : "max-width: 7rem") + ";width:100%")">
-                                <ChildContent>
-                                    <RadzenNumeric TValue="int" ShowUpDown="false" Disabled="@(!item.IsEditingCost)" @oninput="@((s) => OnInputCost(item, s))" Value="@(item.Cost)" Format="# ₽" aria-label="Цена" />
-                                </ChildContent>
-                                <End>
-                                    <RadzenButton Disabled="@(!item.EnableToSaveCost)" IsBusy=@item.SavingCost @bind-Visible="item.IsEditingCost" Click=@(() => SaveCost(item)) Icon="save" Variant="Variant.Text" Size="ButtonSize.Small" />
-                                    <RadzenButton Icon="@(item.IsEditingCost ? "close" : "edit")" Click="@(() => item.IsEditingCost = !item.IsEditingCost)" Variant="Variant.Text" Size="ButtonSize.Small" />
-                                </End>
-                            </RadzenFormField>
+                            <RadzenTextBox style="width: 100%; margin-right: 0.5rem" @bind-Value=@item.Name aria-label="Название" />
+                            <RadzenNumeric style="max-width: 4rem; width:100%;margin-right: 0.5rem" TValue="decimal" ShowUpDown="true" f @bind-Value=@item.Count Format="@(item.CountInteger ? $"# {item.QuantityMeasure.ToShortString()}." : $"#0.0 {item.QuantityMeasure.ToShortString()}.")" aria-label="Количество" />
+                            <RadzenNumeric style="max-width: 4rem; width:100%;margin-right: 0.5rem" TValue="int" ShowUpDown="false" @bind-Value=@item.Cost @oninput="@((s) => OnInputCost(item, s))" Format="# ₽" aria-label="Цена" />
+                            <RadzenButton Variant="Variant.Text" Icon="delete" IconColor="red" IsBusy=@item.Deleting ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteItem(item))" />
                         </RadzenStack>
-
-
-                        <RadzenStack class="rz-mt-1" Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" JustifyContent="JustifyContent.SpaceBetween">
-                            <RadzenText Text="@(((item.Count == 1 || !item.CountInteger) ? item.UsersParts.Values.Sum() == 0 : item.UsersParts.Values.Sum() != item.Count) ? "Разделите позицию" : "")" style="color: var(--rz-danger)" />
-
-                            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center">
-
-                                <RadzenText class="rz-mb-0" Style="font-size: 0.75rem">Количество</RadzenText>
-                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center">
-                                    <RadzenButton Variant="Variant.Text" IsBusy="@item.SavingDecreaseCount" Disabled="@(item.SavingIncreaseCount || !item.CountInteger || item.Count == 1)" ButtonStyle="ButtonStyle.Base" Icon="remove" Click="@(() => DecreaseCount(item))" />
-
-                                    <RadzenText class="rz-mb-0 rz-mx-2" Text="@(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())"></RadzenText>
-                                    <RadzenButton Variant="Variant.Text" IsBusy="@item.SavingIncreaseCount" Disabled="@(item.SavingDecreaseCount || !item.CountInteger)" ButtonStyle="ButtonStyle.Base" Icon="add" Click="@(() => IncreaseCount(item))" />
-
-                                </RadzenStack>
-
-                            </RadzenStack>
-
-                            @*  <RadzenFormField Visible="@item.CountInteger" Text="Количество" style="@((item.IsEditingCount ? "max-width: 9rem" : "max-width: 7rem") + ";width:100%")">
-                                <ChildContent>
-                                    <RadzenNumeric TValue="decimal" ShowUpDown="false" Disabled="@(!item.IsEditingCount)" @oninput="@((s) => OnInputCount(item, s))" Value="@(item.Count)" aria-label="Цена" />
-                                </ChildContent>
-                                <End>
-                                    <RadzenButton Disabled="@(!item.EnableToSaveCount)" IsBusy=@item.SavingCount @bind-Visible="item.IsEditingCount" Click=@(() => SaveCost(item)) Icon="save" Variant="Variant.Text" Size="ButtonSize.Small" />
-                                    <RadzenButton Icon="@(item.IsEditingCount ? "close" : "edit")" Click="@(() => item.IsEditingCount = !item.IsEditingCount)" Variant="Variant.Text" Size="ButtonSize.Small" />
-                                </End>
-                            </RadzenFormField> *@
-                        </RadzenStack>
-
-                        <RadzenButton Variant="Variant.Text" Style="font-size: 0.7rem;" IsBusy=@item.Deleting BusyText="Удаляем..." Text="Удалить позицию" ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteItem(item))" />
                     </RadzenStack>
                 </Template>
 
@@ -211,19 +170,11 @@
 
         _items = _invoice.Items.FromList().AsQueryable();
 
-
         _myUserId = myProfile.Id;
 
         _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
         _isLoading = false;
         _processAllowed = true;
-        await InvokeAsync(() => StateHasChanged());
-    }
-
-    private async Task OnInputName(InvoiceItem item, ChangeEventArgs args)
-    {
-        item.EditedName = (string?)args.Value ?? string.Empty;
-        item.EnableToSaveName = !string.IsNullOrWhiteSpace(item.EditedName) && item.EditedName != item.Name;
         await InvokeAsync(() => StateHasChanged());
     }
 
@@ -237,101 +188,10 @@
 
         var value = ((string)args.Value).Replace(",", ".").Replace("₽", string.Empty).Trim();
 
-        if (!int.TryParse(value, out int cost))
+        if (int.TryParse(value, out int cost))
         {
-            item.EnableToSaveCost = false;
-        }
-
-        item.EditedCost = cost;
-        item.EnableToSaveCost = item.EditedCost != item.Cost;
-        await InvokeAsync(() => StateHasChanged());
-    }
-
-    private async Task IncreaseCount(InvoiceItem item)
-    {
-        item.SavingIncreaseCount = true;
-        await InvokeAsync(() => StateHasChanged());
-
-        try
-        {
-            await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.Cost, Count = item.Count + 1, Name = item.Name });
-            item.Count += 1;
-        }
-        catch (ApiException ex)
-        {
-            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
-        }
-        finally
-        {
-            item.SavingIncreaseCount = false;
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost) - item.Cost + cost} ₽";
             await InvokeAsync(() => StateHasChanged());
-        }
-
-
-        item.SavingIncreaseCount = false;
-        await InvokeAsync(() => StateHasChanged());
-    }
-
-    private async Task DecreaseCount(InvoiceItem item)
-    {
-        item.SavingDecreaseCount = true;
-        await InvokeAsync(() => StateHasChanged());
-
-        try
-        {
-            await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.Cost, Count = item.Count - 1, Name = item.Name });
-            item.Count -= 1;
-        }
-        catch (ApiException ex)
-        {
-            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
-        }
-        finally
-        {
-            item.SavingDecreaseCount = false;
-            await InvokeAsync(() => StateHasChanged());
-        }
-    }
-
-
-    private async Task SaveName(InvoiceItem item)
-    {
-        item.SavingName = true;
-
-        try
-        {
-            await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.Cost, Count = item.Count, Name = item.EditedName });
-            item.Name = item.EditedName;
-            item.IsEditingName = false;
-        }
-        catch (ApiException ex)
-        {
-            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
-        }
-        finally
-        {
-            item.SavingName = false;
-        }
-    }
-
-    private async Task SaveCost(InvoiceItem item)
-    {
-        item.SavingCost = true;
-
-        try
-        {
-            await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.EditedCost, Count = item.Count, Name = item.Name });
-            item.Cost = item.EditedCost;
-            item.IsEditingCost = false;
-        }
-        catch (ApiException ex)
-        {
-            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
-        }
-        finally
-        {
-            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
-            item.SavingCost = false;
         }
     }
 
@@ -427,6 +287,27 @@
         }
     }
 
+    private async Task SaveCost(InvoiceItem item)
+    {
+        item.SavingCost = true;
+
+        try
+        {
+            await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.EditedCost, Count = item.Count, Name = item.Name });
+            item.Cost = item.EditedCost;
+            item.IsEditingCost = false;
+        }
+        catch (ApiException ex)
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = ex.ApiResponse.Message, Detail = "Попробуйте еще раз", Duration = 4000 });
+        }
+        finally
+        {
+            _textTotal = $"Итого: {_items.Sum(x => x.Cost)} ₽";
+            item.SavingCost = false;
+        }
+    }
+
     private async Task AddDiscount()
     {
         int cost = _items.Sum(x => x.Cost);
@@ -476,6 +357,11 @@
         {
             _processing = true;
             await InvokeAsync(() => StateHasChanged());
+
+            foreach (var item in _items)
+            {
+                await _client.EditInvoiceItem(new InvoiceItem() { Id = item.Id, Cost = item.Cost, Count = item.Count, Name = item.Name });
+            }
 
             await _client.FinishInvoiceEditing(_invoice.Id);
         }

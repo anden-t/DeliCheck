@@ -10,6 +10,7 @@ using Blazorise.Providers;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Append.Blazor.WebShare;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 namespace DeliCheck.Web
 {
@@ -30,6 +31,7 @@ namespace DeliCheck.Web
             builder.Services.AddScoped(sp => new HttpClient() { BaseAddress = new Uri(AppUrl) })
                 .AddScoped<DeliCheckClient>()
                 .AddSingleton<AlertService>();
+            builder.Services.AddPWAUpdater();
             builder.Services.AddRadzenComponents();
             builder.Services.AddBlazoredLocalStorageAsSingleton();
             builder.Services.AddCropper().AddBlazorCurrentDevice().AddBlazorise(x => x.Immediate = true).AddBootstrap5Providers().AddWebShare();

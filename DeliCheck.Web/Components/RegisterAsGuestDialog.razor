@@ -58,7 +58,7 @@
             _loginVkBusy = true;
             await InvokeAsync(() => StateHasChanged());
 
-            var response = await _client.Vk($"/lobby?id={Id}");
+            var response = await _client.Vk($"/lobby{Id}");
             _nav.NavigateTo(response.Url);
         }
         catch (ApiException ex)

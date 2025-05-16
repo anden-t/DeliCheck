@@ -53,7 +53,9 @@
             var response = await _client.VkCallback(Code, State, DeviceId);
             await _client.SaveLogin(response);
 
-            if (!string.IsNullOrWhiteSpace(ReturnUrl))
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) && ReturnUrl.StartsWith("/lobby") && int.TryParse(ReturnUrl.Substring(6), out int id))
+                _nav.NavigateTo($"/lobby?id={id}");
+            else if (!string.IsNullOrWhiteSpace(ReturnUrl))
                 _nav.NavigateTo(ReturnUrl);
             else
                 _nav.NavigateTo("/");

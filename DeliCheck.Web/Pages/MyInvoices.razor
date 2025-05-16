@@ -68,7 +68,9 @@
             return;
         }
 
-        _invoices = (await _client.ListMyInvoices()).Invoices.AsQueryable();
+        var list = (await _client.ListMyInvoices()).Invoices;
+        list.Reverse();
+        _invoices = list.AsQueryable();
         _invoicesCountZero = _invoices.Count() == 0;
 
 

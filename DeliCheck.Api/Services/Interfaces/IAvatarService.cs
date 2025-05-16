@@ -12,14 +12,14 @@
         /// <returns></returns>
         string GetPathForUserAvatar(int userId);
         /// <summary>
-        /// Сохраняет аватар пользователя, конвертируя его в формат JPG с разрешением 500x500. Возвращает true, если удалось сохранить, иначе false
+        /// Сохраняет аватар пользователя, конвертируя его в формат JPG с разрешением 200x200. Возвращает true, если удалось сохранить, иначе false
         /// </summary>
         /// <param name="stream">Поток с изображением</param>
         /// <param name="userId">Идентификатор пользователя</param>
         /// <returns></returns>
         Task<bool> SaveUserAvatarAsync(Stream stream, int userId, bool skipCrop = false);
         /// <summary>
-        /// Сохраняет аватар незарегистрированного друга, конвертируя его в формат JPG с разрешением 500x500. Возвращает true, если удалось сохранить, иначе false
+        /// Сохраняет аватар незарегистрированного друга, конвертируя его в формат JPG с разрешением 200x200. Возвращает true, если удалось сохранить, иначе false
         /// </summary>
         /// <param name="stream">Поток с изображением</param>
         /// <param name="friendId">Идентификатор друга</param>

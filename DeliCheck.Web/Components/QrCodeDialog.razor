@@ -5,9 +5,9 @@
 @inject DialogService _dialogService
 @inject NotificationService _notify
 
-<div class="qr-cont" style="max-height: 700px; width: 100%;">
-    <div style="margin: 0 auto">
-        <BlazorBarcodeScanner.ZXing.JS.BarcodeReader @ref="_reader" Title="" OnErrorReceived="ErrorReceived" TextWithoutDevices="Не найдено ни одной камеры" LabelVideoDeviceListText="Выберите камеру: " ShowVideoDeviceList=true ShowReset=false ShowResult=false ShowStart=false ShowStop=false ShowToggleTorch=false StartCameraAutomatically=true OnBarcodeReceived="ReceivedBarcodeText" />
+<div class="qr-cont">
+    <div style="margin: 0 auto; height: 100%; width: 100%;">
+        <BlazorBarcodeScanner.ZXing.JS.BarcodeReader @ref="_reader" Title="" StreamHeight="1280" StreamWidth="720" FullWidthVideo="true" VideoHeight="@_videoHeight" VideoWidth="@_videoWidth" OnErrorReceived="ErrorReceived" TextWithoutDevices="Не найдено ни одной камеры" LabelVideoDeviceListText="Выберите камеру: " ShowVideoDeviceList=true ShowReset=false ShowResult=false ShowStart=false ShowStop=false ShowToggleTorch=false StartCameraAutomatically=true OnBarcodeReceived="ReceivedBarcodeText" />
     </div>
 </div>
 
@@ -17,20 +17,29 @@
     } */
 
     video {
-    margin: 0 auto;
+        margin: 0 auto;
+        height: 100%;
+        width: 100%;
     }
 </style>
 
 @code {
     private BarcodeReader _reader;
     public string BarcodeText;
+    private int _videoHeight;
+    private int _videoWidth;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _videoHeight = 1280;
+        _videoWidth = 720;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async void ErrorReceived(ErrorReceivedEventArgs args)
     {
         if (args.Message == "Camera acces is blocked. Please give access to camera for using barcode scanner.")
-        {
-            
             _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Нет разрешения", Detail = "Предоставьте разрешение для камеры в настройках браузере", Duration = 4000 });
-        }
         else 
             _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Ошибка", Detail = args.Message, Duration = 4000 });
     }

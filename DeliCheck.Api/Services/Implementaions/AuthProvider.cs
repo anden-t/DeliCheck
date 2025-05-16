@@ -1,4 +1,5 @@
-﻿using DeliCheck.Models;
+﻿using DeliCheck.Api.Utils;
+using DeliCheck.Models;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,16 +13,21 @@ namespace DeliCheck.Services
     {
         private readonly IAuthService _authService;
         private readonly IVkApi _vkApi;
+        private readonly IAvatarService _avatarService;
+
+        private static int _femaleIndex = 0;
+        private static int _maleIndex = 0;
 
         /// <summary>
         /// Создает провайдер авторизации для прямой авторизации
         /// </summary>
         /// <param name="authService">Сервис авторизации</param>
         /// <param name="vkApi">Сервис авторизации</param>
-        public AuthProvider(IAuthService authService, IVkApi vkApi)
+        public AuthProvider(IAuthService authService, IVkApi vkApi, IAvatarService avatarService)
         {
             _authService = authService;
             _vkApi = vkApi;
+            _avatarService = avatarService;
         }
 
         /// <summary>
@@ -77,7 +83,7 @@ namespace DeliCheck.Services
         /// <param name="firstName">Имя</param>
         /// <param name="lastName">Фамилия</param>
         /// <returns></returns>
-        public async Task<RegisterResult> RegisterAsync(string username, string email, string phoneNumber, string password, string firstName, string lastName, long? vkId = null)
+        public async Task<RegisterResult> RegisterAsync(string username, string email, string phoneNumber, string password, string firstName, string lastName, bool randomAvatar = true, long? vkId = null)
         {
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) || password.Length < 6) return RegisterResult.InvalidData;
 
@@ -103,6 +109,45 @@ namespace DeliCheck.Services
                 db.Users.Add(user);
                 await db.SaveChangesAsync();
 
+                if (randomAvatar)
+                {
+                    user.HasAvatar = true;
+                    
+                    if(FemaleNames.Names.Any(x => x.Equals(firstName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        Directory.CreateDirectory("avatars/kusya");
+                        var max = Directory.GetFiles("avatars/kusya").Length;
+
+                        if(max > 0)
+                        {
+                            if (_femaleIndex >= max)
+                                _femaleIndex = 0;
+
+                            await _avatarService.SaveUserAvatarAsync(File.OpenRead($"avatars/kusya/{_femaleIndex++}.jpg"), user.Id);
+
+                            if (_femaleIndex >= max)
+                                _femaleIndex = 0;
+                        }
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory("avatars/sberkot");
+                        var max = Directory.GetFiles("avatars/sberkot").Length;
+
+                        if (max > 0)
+                        {
+                            if (_maleIndex >= max)
+                                _maleIndex = 0;
+
+                            await _avatarService.SaveUserAvatarAsync(File.OpenRead($"avatars/sberkot/{_maleIndex++}.jpg"), user.Id);
+
+                            if (_maleIndex >= max)
+                                _maleIndex = 0;
+                        }
+                    }
+                }
+
+                await db.SaveChangesAsync();
                 return new RegisterResult(user);
             }
         }
@@ -120,7 +165,7 @@ namespace DeliCheck.Services
                 }
                 else
                 {
-                    var reg = await RegisterAsync(GetGuestUsername(), string.Empty, string.Empty, GetRandomPassword(), "firstname", "lastname", data.VkUserId);
+                    var reg = await RegisterAsync(GetGuestUsername(), string.Empty, string.Empty, GetRandomPassword(), "firstname", "lastname", false, data.VkUserId);
                     user = reg.User;
 
                     if (user != null) token = await _authService.CreateSessionTokenAsync(user.Id, device);

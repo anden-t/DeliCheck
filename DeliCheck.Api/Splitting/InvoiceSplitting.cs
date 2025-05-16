@@ -231,7 +231,7 @@ namespace DeliCheck.Api.Splitting
                         userPart = item.UserParts[user.Id];
                     }
 
-                    sum += userPart * item.Cost;
+                    sum += (userPart / item.Quantity) * item.Cost;
                 }
 
                 CurrentState.UsersSum.Add(user.Id, (int)Math.Round(sum));

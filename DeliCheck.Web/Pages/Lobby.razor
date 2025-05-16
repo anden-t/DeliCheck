@@ -1,4 +1,5 @@
 ﻿@page "/lobby"
+@using Append.Blazor.WebShare
 @using DeliCheck.Schemas
 @using DeliCheck.Schemas.Requests
 @using DeliCheck.Schemas.Responses
@@ -14,42 +15,50 @@
 @inject NotificationService _notify
 @inject ContextMenuService _contextMenuService
 @inject NavigationManager _nav
+@inject IWebShareService _webShareService
 
 <PageTitle>ДелиЧек — Разделить чек</PageTitle>
 
 <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" style="width: 100%; margin-top: 1rem">
     <div class="rz-shadow-2 rz-border-radius-2 card" Style="max-width: 500px; width: 100%">
         <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center" TextStyle="TextStyle.H5" style="font-weight: 600;">Разделить чек</RadzenText>
+        <RadzenButton Icon="share" class="my-button rz-w-100" style="width: 218px; margin-left: auto; margin-right: auto; margin-bottom: 12px;" Click=@Share Text="Поделиться ссылкой"></RadzenButton>
+        <RadzenText class="rz-mb-1" TextAlign="TextAlign.Center">Пригласите друзей, чтобы разделить с ними чек</RadzenText>
         <RadzenText class="rz-mb-3" TextAlign="TextAlign.Center">Нажимайте на свой аватар, чтобы выбрать позицию</RadzenText>
-        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="0">    
             <RadzenStack class="rz-mb-1" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                 <RadzenText class="rz-mb-0" TextAlign="TextAlign.Left" TextStyle="TextStyle.H6" style="font-weight: 600;">Список позиций</RadzenText>
             </RadzenStack>
-            <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "items" })" Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:100%;margin-top:1rem;padding:0px;overflow-x:hidden" : "")"
+            <RadzenStack style="margin-top:1rem;" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                <RadzenText style="font-weight: 600; width: 100%; margin-right: 0.5rem" Text="Наименование" />
+                <RadzenText style="font-weight: 600; max-width: 4rem; width:100%;margin-right: 0.5rem" Text="Кол-во" />
+                <RadzenText style="font-weight: 600; max-width: 4rem; width:100%;" TextAlign="TextAlign.Right" Text="Сумма" />
+            </RadzenStack>
+            <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "items" })" Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:100%;padding:0px;overflow-x:hidden" : "")"
             WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
             Data="@_items" TItem="InvoiceItem" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" IsLoading="@_isLoading">
                 <Template Context="item">
                     <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch">
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenText Text="@(item.Name)" TextAlign="TextAlign.Left" Style="font-weight: 600; width: 100%; margin-right: 0.5rem"/>
-                            <RadzenText Text="@($"{(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())} {item.QuantityMeasure.ToShortString()}.")" TextAlign="TextAlign.Left" Style="max-width: 3rem; width:100%; margin-right: 0.5rem" />
-                            <RadzenText Text="@($"{item.Cost} ₽")" TextAlign="TextAlign.Right" Style="font-weight: 600; max-width: 3rem; width:100%; " />
+                            <RadzenText Text="@(item.Name)" TextAlign="TextAlign.Left" Style="font-weight: 600; width: 100%; margin: 0 1rem 0 0" />
+                            <RadzenText Text="@($"{(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())} {item.QuantityMeasure.ToShortString()}.")" TextAlign="TextAlign.Left" Style="max-width: 3.3rem; width:100%; margin: 0 0.5rem 0 0;" />
+                            <RadzenText Text="@($"{item.Cost} ₽")" TextAlign="TextAlign.Right" Style="font-weight: 600; max-width: 4rem; width:100%; margin: 0 0 0 0;" />
                         </RadzenStack>
 
-                        <div style="overflow-x: auto; height: 85px; overflow-y: hidden;">
+                        <div style="overflow-x: auto; height: 70px; overflow-y: hidden;">
                             <div style="max-width: 1000px; height: 70px">
                                 <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 1000px; height: 70px"
                                 TItem="Friend" AllowVirtualization="false" WrapItems="true" AllowPaging="false" Data="@_selected">
 
                                     <Template Context="user">
-                                        <div class="rz-shadow-2" style="@($"{(user.Finished ? "background: var(--rz-success-lighter);" : (user.UserId == _myUserId ? "" : "background: var(--rz-base-light);"))}; transition: all 150ms ease-in-out; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 74px; width: 74px; max-width: 74px; height: 72px; margin-top: 5px")" item="true" @onclick="@((s) => OnClickUser(item, user))">
+                                        <div class="rz-shadow-2" style="@($"{(user.Finished ? "background: var(--rz-success-lighter);" : (user.UserId == _myUserId ? "" : "background: var(--rz-base-light);"))}; transition: all 150ms ease-in-out; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 65px; width: 65px; max-width: 65px; height: 62px; margin-top: 5px")" item="true" @onclick="@((s) => OnClickUser(item, user))">
 
-                                            <div class="rz-shadow-2" style=@($"{((item.UsersParts[user] == 0) ? "" : (user.UserId == _myUserId ? "background: var(--rz-primary);" : "background: var(--rz-base);"))} transition: all 150ms ease-in-out; position: absolute; top: -5px; left:59px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px")>
+                                            <div class="rz-shadow-2" style=@($"{((item.UsersParts[user] == 0) ? "" : (user.UserId == _myUserId ? "background: var(--rz-primary);" : "background: var(--rz-base);"))} transition: all 150ms ease-in-out; position: absolute; top: -5px; left:49px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px")>
                                                 <RadzenText class="rz-mb-0" Style="@($"{(item.UsersParts[user] == 0 ? "" : (user.UserId == _myUserId ? "color: var(--rz-on-primary);" : "color: var(--rz-black);"))} min-width: 16px; width: 16px; text-align: center; font-size: 0.8rem; font-weight: 600")" Text="@($"x{(item.UsersParts[user])}")" />
                                             </div>
 
                                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
-                                                <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 2.8rem; height: 2.8rem;" />
+                                                <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 2.4rem; height: 2.4rem;" />
                                                 <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 69px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
                                             </RadzenStack>
                                         </div>
@@ -399,5 +408,16 @@
             _processing = false;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private async Task Share()
+    {
+        if (!await _webShareService.IsSupportedAsync())
+        {
+            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Info, Summary = "Ваш браузер не поддерживает функцию \"Поделиться\"", Detail = "Просто скопируйте ссылку", Duration = 4000 });
+            return;
+        }
+
+        await _webShareService.ShareAsync(new ShareData() { Text = "Разделите чек со мной: ", Title = "ДелиЧек", Url = $"{Program.SiteUrl}lobby?id={Id}" });
     }
 }

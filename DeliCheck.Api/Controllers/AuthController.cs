@@ -288,6 +288,12 @@ namespace DeliCheck.Controllers
         [ProducesResponseType(typeof(ApiResponse), (int)System.Net.HttpStatusCode.OK)]
         public async Task<IActionResult> VkConnectCallback(string code, string state, string device_id)
         {
+            if (!state.Contains("."))
+            {
+                var dotIndex = state.Length - 32;
+                state = $"{state.Substring(0, dotIndex)}.{state.Substring(dotIndex)}";
+            }
+
             var token = _authService.GetSessionTokenByString(state);
             if (token == null) return Unauthorized(ApiResponse.Failure(Constants.Unauthorized));
 

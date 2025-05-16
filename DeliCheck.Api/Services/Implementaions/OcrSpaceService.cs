@@ -76,7 +76,7 @@ namespace DeliCheck.Services
                     {
                         WorkingDirectory = Path.GetDirectoryName(_configuration["TesseractPath"]),
                         FileName = _configuration["TesseractPath"],
-                        Arguments = $"\"{imagePath}\" - -l rus --psm 6",
+                        Arguments = $"\"{imagePath}\" - -l rus -c tessedit_char_blacklist=@(){{}}—®[] --psm 6",
                         UseShellExecute = false,
                         StandardOutputEncoding = Encoding.UTF8,
                         RedirectStandardOutput = true,
