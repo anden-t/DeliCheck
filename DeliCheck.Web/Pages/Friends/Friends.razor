@@ -28,8 +28,8 @@
             <RadzenText class="rz-mt-5" Visible="@_friendsCountZero" TextAlign="TextAlign.Center">К сожалению, вы не добавили еще ни одного друга :(<br/>Можно искать среди зарегистрированных пользователей<br>или ввести имя и добавить друга самому</RadzenText>
             <RadzenText class="rz-mt-5" Visible="@_friendsSearchZero" TextAlign="TextAlign.Center">К сожалению, по вашему запросу не найдено ни одного зарегистрированного человека :(<br />Нажмите на "+" и добавьте друга с таким именем</RadzenText>
 
-            <RadzenDataList Visible="true" AllowVirtualization=@allowVirtualization Style="@(allowVirtualization ? "height:100%;overflow:auto;margin-top:1rem;padding:0px" : "")"
-            WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
+            <RadzenDataList Visible="true" AllowVirtualization=true Style="overflow:visible;margin-top:1rem;padding:0px"
+            WrapItems="false" AllowPaging="false"
             Data="@_friends" TItem="Friend" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true" IsLoading="@_isLoading">
 
                 <Template Context="friend">

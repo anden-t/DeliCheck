@@ -26,6 +26,20 @@
         /// <returns></returns>
         Task<bool> SaveFriendAvatarAsync(Stream stream, int friendId, bool skipCrop = false);
         /// <summary>
+        /// Устанавливает рандомный аватар для пользователя
+        /// </summary>
+        /// <param name="firstname">Имя</param>
+        /// <param name="userId">Идентификатор</param>
+        /// <returns></returns>
+        Task SetRandomUserAvatar(string firstname, int userId);
+        /// <summary>
+        /// Устанавливает рандомный аватар для незаристрированного друга
+        /// </summary>
+        /// <param name="firstname">Имя</param>
+        /// <param name="userId">Идентификатор</param>
+        /// <returns></returns>
+        Task SetRandomFriendAvatar(string firstname, int userId);
+        /// <summary>
         /// Получает аватар пользователя. Возвращает null, если аватара не существует
         /// </summary>
         /// <param name="userId">Идентификатор пользователя</param>

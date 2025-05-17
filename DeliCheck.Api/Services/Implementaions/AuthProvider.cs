@@ -14,10 +14,6 @@ namespace DeliCheck.Services
         private readonly IAuthService _authService;
         private readonly IVkApi _vkApi;
         private readonly IAvatarService _avatarService;
-
-        private static int _femaleIndex = 0;
-        private static int _maleIndex = 0;
-
         /// <summary>
         /// Создает провайдер авторизации для прямой авторизации
         /// </summary>
@@ -112,42 +108,11 @@ namespace DeliCheck.Services
                 if (randomAvatar)
                 {
                     user.HasAvatar = true;
-                    
-                    if(FemaleNames.Names.Any(x => x.Equals(firstName, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        Directory.CreateDirectory("avatars/kusya");
-                        var max = Directory.GetFiles("avatars/kusya").Length;
 
-                        if(max > 0)
-                        {
-                            if (_femaleIndex >= max)
-                                _femaleIndex = 0;
-
-                            await _avatarService.SaveUserAvatarAsync(File.OpenRead($"avatars/kusya/{_femaleIndex++}.jpg"), user.Id);
-
-                            if (_femaleIndex >= max)
-                                _femaleIndex = 0;
-                        }
-                    }
-                    else
-                    {
-                        Directory.CreateDirectory("avatars/sberkot");
-                        var max = Directory.GetFiles("avatars/sberkot").Length;
-
-                        if (max > 0)
-                        {
-                            if (_maleIndex >= max)
-                                _maleIndex = 0;
-
-                            await _avatarService.SaveUserAvatarAsync(File.OpenRead($"avatars/sberkot/{_maleIndex++}.jpg"), user.Id);
-
-                            if (_maleIndex >= max)
-                                _maleIndex = 0;
-                        }
-                    }
+                    await _avatarService.SetRandomUserAvatar(firstName, user.Id);
+                    await db.SaveChangesAsync();
                 }
 
-                await db.SaveChangesAsync();
                 return new RegisterResult(user);
             }
         }

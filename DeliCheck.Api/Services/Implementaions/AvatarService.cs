@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp;
+﻿using DeliCheck.Api.Utils;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
 namespace DeliCheck.Services
@@ -8,13 +9,15 @@ namespace DeliCheck.Services
     /// </summary>
     public class AvatarService : IAvatarService
     {
-        private static readonly Size _size = new Size(200, 200);
-        private readonly ILogger<IAvatarService> _logger;
-
         private static readonly string _baseFolder = Path.GetFullPath("avatars");
         private static readonly string _userFolder = $"{_baseFolder}/users";
         private static readonly string _friendFolder = $"{_baseFolder}/friends";
         private static readonly string _ext = ".jpg";
+        private static readonly Size _size = new Size(200, 200);
+
+        private static int _femaleIndex = 0;
+        private static int _maleIndex = 0;
+        private readonly ILogger<IAvatarService> _logger;
         private static string _defaultAvatarPath => $"{_baseFolder}/default{_ext}";
         public AvatarService(ILogger<IAvatarService> logger)
         {
@@ -87,6 +90,76 @@ namespace DeliCheck.Services
         }
         public FileStream? GetUserAvatar(int userId) => GetAvatar(GetPathForUserAvatar(userId));
         public FileStream? GetFriendAvatar(int friendId) => GetAvatar(GetPathForFriendAvatar(friendId));
+        public async Task SetRandomUserAvatar(string firstname, int userId)
+        {
+            if (FemaleNames.Names.Any(x => x.Equals(firstname, StringComparison.OrdinalIgnoreCase)))
+            {
+                Directory.CreateDirectory("avatars/kusya");
+                var max = Directory.GetFiles("avatars/kusya").Length;
+
+                if (max > 0)
+                {
+                    if (_femaleIndex >= max)
+                        _femaleIndex = 0;
+
+                    await SaveUserAvatarAsync(File.OpenRead($"avatars/kusya/{_femaleIndex++}.jpg"), userId);
+
+                    if (_femaleIndex >= max)
+                        _femaleIndex = 0;
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory("avatars/sberkot");
+                var max = Directory.GetFiles("avatars/sberkot").Length;
+
+                if (max > 0)
+                {
+                    if (_maleIndex >= max)
+                        _maleIndex = 0;
+
+                    await SaveUserAvatarAsync(File.OpenRead($"avatars/sberkot/{_maleIndex++}.jpg"), userId);
+
+                    if (_maleIndex >= max)
+                        _maleIndex = 0;
+                }
+            }
+        }
+        public async Task SetRandomFriendAvatar(string firstname, int friendId)
+        {
+            if (FemaleNames.Names.Any(x => x.Equals(firstname, StringComparison.OrdinalIgnoreCase)))
+            {
+                Directory.CreateDirectory("avatars/kusya");
+                var max = Directory.GetFiles("avatars/kusya").Length;
+
+                if (max > 0)
+                {
+                    if (_femaleIndex >= max)
+                        _femaleIndex = 0;
+
+                    await SaveFriendAvatarAsync(File.OpenRead($"avatars/kusya/{_femaleIndex++}.jpg"), friendId);
+
+                    if (_femaleIndex >= max)
+                        _femaleIndex = 0;
+                }
+            }
+            else
+            {
+                Directory.CreateDirectory("avatars/sberkot");
+                var max = Directory.GetFiles("avatars/sberkot").Length;
+
+                if (max > 0)
+                {
+                    if (_maleIndex >= max)
+                        _maleIndex = 0;
+
+                    await SaveFriendAvatarAsync(File.OpenRead($"avatars/sberkot/{_maleIndex++}.jpg"), friendId);
+
+                    if (_maleIndex >= max)
+                        _maleIndex = 0;
+                }
+            }
+        }
 
         private bool RemoveAvatar(string path)
         {;

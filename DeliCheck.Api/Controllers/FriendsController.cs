@@ -17,15 +17,17 @@ namespace DeliCheck.Controllers
         private readonly IAuthService _authService;
         private readonly IVkApi _vkApi;
         private readonly IConfiguration _configuration;
-
+        private readonly IAvatarService _avatarService;
+        private const bool randomAvatar = true;
         /// <summary>
         /// Создает контроллер, представляющий методы для списка друзей
         /// </summary>
-        public FriendsController(IAuthService authService, IVkApi vkApi, IConfiguration configuration)
+        public FriendsController(IAuthService authService, IVkApi vkApi, IConfiguration configuration, IAvatarService avatarService)
         {
             _authService = authService;
             _vkApi = vkApi;
             _configuration = configuration;
+            _avatarService = avatarService;
         }
 
         /// <summary>
@@ -126,16 +128,24 @@ namespace DeliCheck.Controllers
 
             using (var db = new DatabaseContext())
             {
-                db.OfflineFriends.Add(new OfflineFriendModel()
+                var friend = new OfflineFriendModel()
                 {
                     OwnerId = token.UserId,
                     HasAvatar = false,
                     VkId = null,
                     Firstname = request.Firstname,
                     Lastname = request.Lastname
-                });
-
+                };
+                db.OfflineFriends.Add(friend);
                 await db.SaveChangesAsync();
+
+                if (randomAvatar)
+                {
+                    friend.HasAvatar = true;
+
+                    await _avatarService.SetRandomFriendAvatar(request.Firstname, friend.Id);
+                    await db.SaveChangesAsync();
+                }
 
                 return Ok(ApiResponse.Success());
             }

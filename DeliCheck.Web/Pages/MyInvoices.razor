@@ -73,7 +73,6 @@
         _invoices = list.AsQueryable();
         _invoicesCountZero = _invoices.Count() == 0;
 
-
         _isLoading = false;
         await InvokeAsync(() => StateHasChanged());
     }
