@@ -19,7 +19,7 @@ namespace DeliCheck.Api.Services.Implementaions
         /// </summary>
         //private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
         //private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d\n]*)(\1)?(?(8)\n([А-Яа-яa-zA-Z\d ]*)\n|$)";
-        private const string _regexPattern1 = @"(.*?)(?:\r\n?|\n)?(.*?)[*^'""#`хХxX\s]+(\d*?[\.,]?\d*?)\s*?((?:(?:п|n)орций)?(?:(?:п|n)ор(?:ц|у))?(?:(?:п|n)(?:о|o)(?:р|p))?(?:(?:e|е)д)?(?:шт)?(?:мл)?(?:л)?(?:(?:г|r))?(?:(?:г|r)(?:р|p))?(?:к(?:r|г))?)[:.,\-=\s]+([-]?(\d+\s)?\d+\s?(\.|,)\s?\d\d)([^\d\n\r]*?)(\1)?(?(9)(?:\r\n?|\n)([А-Яа-яa-zA-Z\d ]*)(?:\r\n?|\n)|(?:\r\n?|\n))";
+        private const string _regexPattern1 = @"(.*?)(?:\r\n?|\n)?(.*?)[*^'""#`хХxX\s]+(\d*?[\.,]?\d*?)\s*?((?:(?:п|n)орций)?(?:(?:п|n)ор(?:ц|у))?(?:(?:п|n)(?:о|o)(?:р|p))?(?:(?:e|е)д)?(?:шт)?(?:мл)?(?:л)?(?:(?:г|r))?(?:(?:г|r)(?:р|p))?(?:к(?:r|г))?)[:.,\-=\s]+([-]?(\d+\s)?\d+\s?[\.,]+\s?\d\d)([^\d\n\r]*?)(\1)?(?(9)(?:\r\n?|\n)([А-Яа-яa-zA-Z\d ]*)(?:\r\n?|\n)|(?:\r\n?|\n))";
         /// <summary>
         /// Паттерн для вида "Наименование | Количество * Стоимость | Сумма (000.00)". Поддерживает перенос части названия на строку выше
         /// </summary>
@@ -29,7 +29,6 @@ namespace DeliCheck.Api.Services.Implementaions
         /// Паттерн для вида "Количество * Наименование | Сумма (000.00)"
         /// </summary>
         private const string _regexPattern3 = @"^(\d+)\s?[*^'""#`хХxX]?(.*?)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
-
         /// <summary>
         /// Паттерн для вида "Наименование | Сумма (000)"
         /// </summary>
@@ -90,7 +89,7 @@ namespace DeliCheck.Api.Services.Implementaions
             else if (itemsPattern1.Count > 1) items = itemsPattern1;
             else items = itemsPattern4;
 
-                decimal itemsSum = itemsPattern1.Sum(x => x.Cost);
+            decimal itemsSum = items.Sum(x => x.Cost);
             totalCost = itemsSum;
 
             return (new InvoiceModel() { Name = "Чек", TotalCost = totalCost, OcrText = text, CreatedTime = DateTime.UtcNow }, items);

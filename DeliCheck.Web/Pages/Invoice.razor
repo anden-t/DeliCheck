@@ -23,8 +23,8 @@
         Data="@_items" TItem="InvoiceItem" IsLoading="@_isLoading">
             <Columns>
                 <RadzenDataGridColumn Property="@nameof(InvoiceItem.Name)" Title="Название" Frozen="false" />
-                <RadzenDataGridColumn Property="@nameof(InvoiceItem.Count)" Title="Кол-во" Frozen="false"/>
-                <RadzenDataGridColumn Property="@nameof(InvoiceItem.Cost)" FormatString="{0} ₽" Title="Цена" Frozen="false" />
+                <RadzenDataGridColumn Width="66px" MaxWidth="90px" Property="@nameof(InvoiceItem.QuantityWithMeasure)" Title="Кол-во" Frozen="false" />
+                <RadzenDataGridColumn Width="73px" MaxWidth="90px" Property="@nameof(InvoiceItem.Cost)" FormatString="{0:0.#} ₽" Title="Цена" Frozen="false" />
             </Columns>
         </RadzenDataGrid>
 
@@ -55,12 +55,12 @@
                 Data="@bill.ItemsQueryable" TItem="BillItemResponseModel" IsLoading="@_isLoading">
                     <Columns>
                         <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Name)" Title="Название" Frozen="false" />
-                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Quantity)" Title="Кол-во" Frozen="false" />
-                        <RadzenDataGridColumn Property="@nameof(BillItemResponseModel.Cost)" FormatString="{0} ₽" Title="Цена" Frozen="false" />
+                        <RadzenDataGridColumn Width="66px" MaxWidth="90px" Property="@nameof(BillItemResponseModel.QuantityWithMeasure)" Title="Кол-во" Frozen="false" />
+                        <RadzenDataGridColumn Width="73px" MaxWidth="90px" Property="@nameof(BillItemResponseModel.Cost)" FormatString="{0:0.#} ₽" Title="Цена" Frozen="false" />
                     </Columns>
                 </RadzenDataGrid>
 
-                <RadzenText class="rz-mb-1" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@($"Итого: {bill.TotalCost} ₽")"></RadzenText>
+                <RadzenText class="rz-mb-1" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@($"Итого: {bill.TotalCost.ToString("0.#")} ₽")"></RadzenText>
             </Template>
         </RadzenDataList>
 
@@ -138,7 +138,7 @@
         _bills = (await _client.GetBills(_invoice.Id)).Bills.FromList().AsQueryable();
 
         _textPayed = $"Чек оплатил {_bills.First().InvoiceOwnerFirstname} {_bills.First().InvoiceOwnerLastname}";
-        _textTotal = $"Итого: {_invoice.TotalCost} ₽";
+        _textTotal = $"Итого: {_invoice.TotalCost.ToString("0.#")} ₽";
 
         if (await _client.IsAuthenticated())
         {

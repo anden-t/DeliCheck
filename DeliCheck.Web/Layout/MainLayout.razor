@@ -37,20 +37,20 @@
             </RadzenProfileMenu>
         </RadzenStack>
     </RadzenHeader>
-    <RadzenSidebar @bind-Expanded="@sidebarExpanded">
-        <RadzenPanelMenu>
-            <RadzenPanelMenuItem Click=@HideSidebar Text="Разделить чек" Path="/" Icon="receipt_long" />
-            <RadzenPanelMenuItem Click=@HideSidebar Text="Мои друзья" Path="/friends" Icon="group" />
-            <RadzenPanelMenuItem Click=@HideSidebar Text="Мои чеки" Path="/my-invoices" Icon="shopping_cart"></RadzenPanelMenuItem>
-            <RadzenPanelMenuItem Click=@HideSidebar Text="О нас" Path="/about" Icon="alternate_email" />
-            <RadzenPanelMenuItem Click=@HideSidebar Text="Помощь" Path="https://t.me/maass78" Icon="help" />
+    <RadzenSidebar class="my-sidebar" @bind-Expanded="@sidebarExpanded">
+        <RadzenPanelMenu class="my-panel-menu">
+            <RadzenPanelMenuItem class="my-panel-menu-item" Click=@HideSidebar Text="Разделить чек" Path="/" Icon="receipt_long" />
+            <RadzenPanelMenuItem class="my-panel-menu-item" Click=@HideSidebar Text="Мои друзья" Path="/friends" Icon="group" />
+            <RadzenPanelMenuItem class="my-panel-menu-item" Click=@HideSidebar Text="Мои чеки" Path="/my-invoices" Icon="shopping_cart"></RadzenPanelMenuItem>
+            <RadzenPanelMenuItem class="my-panel-menu-item" Click=@HideSidebar Text="О нас" Path="/about" Icon="alternate_email" />
+            <RadzenPanelMenuItem class="my-panel-menu-item" Click=@HideSidebar Text="Помощь" Path="https://t.me/maass78" Icon="help" />
         </RadzenPanelMenu>
 
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" class="rz-px-2 rz-py-4">
-            <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                <RadzenLabel class="rz-mb-1" Text="Выбор темы"/>
-                <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@theme.Theme" ValueChanged="@ChangeTheme" Data="@Themes.Free" TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value)></RadzenDropDown>
-            </RadzenStack>
+            @* <RadzenStack Orientation="Orientation.Vertical" Gap="0"> *@
+            @*     <RadzenLabel class="rz-mb-1" Text="Выбор темы"/> *@
+            @*     <RadzenDropDown Name="ThemeDropDown" TValue="string" Value="@theme.Theme" ValueChanged="@ChangeTheme" Data="@Themes.Free" TextProperty=@nameof(Theme.Text) ValueProperty=@nameof(Theme.Value)></RadzenDropDown> *@
+            @* </RadzenStack> *@
             <RadzenAppearanceToggle />
         </RadzenStack>
 

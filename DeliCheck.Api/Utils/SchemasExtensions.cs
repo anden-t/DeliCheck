@@ -140,7 +140,7 @@ namespace DeliCheck.Utils
                 Lastname = model.Lastname,
                 UserId = null,
                 FriendLabelId = model.Id,
-                AvatarUrl = model.HasAvatar ? $"https://{configuration["Domain"]}/avatars/friends?userId={model.Id}" : $"https://{configuration["Domain"]}/avatars/default",
+                AvatarUrl = model.HasAvatar ? $"https://{configuration["Domain"]}/avatars/friend?friendLabelId={model.Id}" : $"https://{configuration["Domain"]}/avatars/default",
                 HasProfile = false,
                 VkId = model.VkId,
                 HasVk = model.VkId != null

@@ -245,6 +245,12 @@
         selected ??= new List<Friend>();
         selected.Add(_i);
 
+        if (selected.All(x => _selected.Any(c => x.HasProfile == c.HasProfile && (x.HasProfile ? x.UserId == c.UserId : x.FriendLabelId == c.FriendLabelId))) &&
+        _selected.All(x => selected.Any(c => x.HasProfile == c.HasProfile && (x.HasProfile ? x.UserId == c.UserId : x.FriendLabelId == c.FriendLabelId))))
+        {
+            return;
+        }
+
         List<Friend> unselected = new List<Friend>();
 
         foreach (var s in _selected)
@@ -257,18 +263,19 @@
             if (!_selected.Contains(s))
                 nowSelected.Add(s);
 
-
-        foreach (var item in _items)
-            foreach (var user in unselected)
-                if (item.UsersParts.ContainsKey(user))
-                    item.UsersParts.Remove(user);
-
-        foreach (var item in _items)
+        try
         {
-            foreach (var user in nowSelected)
-                if (!item.UsersParts.ContainsKey(user))
-                    item.UsersParts.Add(user, 0);
+            foreach (var item in _items)
+                foreach (var user in unselected)
+                    //if (item.UsersParts.ContainsKey(user))
+                        item.UsersParts.Remove(user);
+
+            foreach (var item in _items)
+                foreach (var user in nowSelected)
+                    if (!item.UsersParts.ContainsKey(user))
+                        item.UsersParts.Add(user, 0);
         }
+        catch { }
 
         _selected = selected;
         await InvokeAsync(StateHasChanged);

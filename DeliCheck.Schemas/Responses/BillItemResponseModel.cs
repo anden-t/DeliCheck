@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace DeliCheck.Schemas.Responses
 {
@@ -27,5 +28,8 @@ namespace DeliCheck.Schemas.Responses
         /// </summary>
         [JsonPropertyName("quantity_measure")]
         public ItemQuantityMeasure QuantityMeasure { get; set; }
+
+        [NotMapped]
+        public string QuantityWithMeasure => $"{Quantity.ToString("0.#")} {QuantityMeasure.ToShortString()}.";
     }
 }

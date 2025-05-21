@@ -46,8 +46,7 @@ namespace DeliCheck.Web.Models
         public bool Deleting { get; set; }
 
         public Dictionary<Friend, int> UsersParts { get; set; }
-
-
+        public string QuantityWithMeasure => $"{Count.ToString("0.#")} {QuantityMeasure.ToShortString()}.";
         public InvoiceItem()
         {
             UsersParts = new Dictionary<Friend, int>();

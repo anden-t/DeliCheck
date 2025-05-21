@@ -110,7 +110,7 @@
         {
             switch (measure)
             {
-                case ItemQuantityMeasure.Piece: return "ед";
+                case ItemQuantityMeasure.Piece: return "шт";
                 //case ItemQuantityMeasure.Piece: return "порц";
                 case ItemQuantityMeasure.Gram: return "гр";
                 case ItemQuantityMeasure.Kilogram: return "кг";

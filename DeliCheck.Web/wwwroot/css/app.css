@@ -167,3 +167,23 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.my-sidebar {
+    --rz-sidebar-z: 1;
+    --rz-sidebar-width: 250px;
+    --rz-sidebar-border-inline-end: var(--rz-border-normal);
+    --rz-sidebar-background-color: var(--rz-header-background-color);
+    --rz-sidebar-color: var(--rz-text-color);
+}
+
+.my-panel-menu {
+    --rz-panel-menu-item-color: var(--rz-text-color);
+    --rz-panel-menu-item-active-color: var(--rz-text-color);
+    --rz-panel-menu-item-hover-color: var(--rz-text-color);
+    --rz-panel-menu-icon-color: var(--rz-text-color);
+    --rz-panel-menu-item-border: 0px;
+    --rz-panel-menu-item-background-color: var(--rz-header-background-color);
+    --rz-panel-menu-item-hover-background-color: rgba(0, 0, 0, 0.04);
+    --rz-panel-menu-item-active-background-color: rgba(0, 0, 0, 0.05);
+}
+

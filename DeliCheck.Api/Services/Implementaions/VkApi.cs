@@ -144,6 +144,7 @@ namespace DeliCheck.Services
             var items = json?["response"]?["items"]?.AsArray();
             if(items != null)
             {
+                Console.WriteLine(items.Count);
                 using (var db = new DatabaseContext())
                 {
                     foreach (var item in items)
@@ -152,7 +153,7 @@ namespace DeliCheck.Services
                         {
                             var vkId = item?["id"]?.GetValue<long>();
                             var user = db.Users.FirstOrDefault(x => x.VkId == vkId);
-                            var offlineFriend = db.OfflineFriends.FirstOrDefault(x => x.VkId == vkId);
+                            var offlineFriend = db.OfflineFriends.FirstOrDefault(x => x.VkId == vkId && x.OwnerId == authData.UserId);
 
                             if (user != null)
                             {
