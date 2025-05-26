@@ -39,11 +39,17 @@ namespace DeliCheck.Api.Services.Implementaions
             "итог",
             "оплат",
             "всего",
+            "всеrо",
+            "всerо",
             "наличны",
             "безнал",
             "сбербанк",
             "сумма",
-            "рубли"
+            "рубли",
+            "pyбли",
+            "pубли",
+            "ру6ли",
+            "pубли"
         ];
         private const string _excludeChars = "0123456789*xх-+=#,. ";
         private static readonly string[] _excludeInFirstItem = 
@@ -84,10 +90,10 @@ namespace DeliCheck.Api.Services.Implementaions
 
             List<InvoiceItemModel> items;
 
-            var itemsPattern1 = Regex.Matches(text, _regexPattern1, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern1Selector).Where(x => x != null).ToList();
-            var itemsPattern2 = Regex.Matches(text, _regexPattern2, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern2Selector).Where(x => x != null).ToList();
-            var itemsPattern3 = Regex.Matches(text, _regexPattern3, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern3Selector).Where(x => x != null).ToList();
-            var itemsPattern4 = Regex.Matches(text, _regexPattern4, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern4Selector).Where(x => x != null).ToList();
+            var itemsPattern1 = Regex.Matches(text, _regexPattern1, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern1Selector).Where(x => x != null && x.Name != "Рубли").ToList();
+            var itemsPattern2 = Regex.Matches(text, _regexPattern2, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern2Selector).Where(x => x != null && x.Name != "Рубли").ToList();
+            var itemsPattern3 = Regex.Matches(text, _regexPattern3, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern3Selector).Where(x => x != null && x.Name != "Рубли").ToList();
+            var itemsPattern4 = Regex.Matches(text, _regexPattern4, RegexOptions.Multiline | RegexOptions.IgnoreCase).Cast<Match>().Select(Pattern4Selector).Where(x => x != null && x.Name != "Рубли").ToList();
 
             Console.WriteLine($"Pattern 1: {itemsPattern1.Count} matches");
             Console.WriteLine($"Pattern 2: {itemsPattern2.Count} matches");
