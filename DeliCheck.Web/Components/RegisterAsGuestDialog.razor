@@ -12,8 +12,8 @@
         </div>
 
         <div class="rz-mb-3">
-            <RadzenFormField Text="Фамилия" class="rz-w-100">
-                <RadzenTextBox @bind-Value="_lastname" aria-label="Фамилия" />
+            <RadzenFormField Text="Фамилия (необязательно)" class="rz-w-100">
+                <RadzenTextBox @bind-Value="_lastname" aria-label="Фамилия (необязательно)" />
             </RadzenFormField>
         </div>
 
@@ -39,7 +39,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _registerDisabled = false;
+        _registerDisabled = true;
         await InvokeAsync(() => StateHasChanged());
     }
 

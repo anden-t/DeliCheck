@@ -12,7 +12,7 @@ namespace DeliCheck.Schemas.Responses
         /// </summary>
         [JsonPropertyName("id")]
         public int Id { get; set; }
-        /// <summary>
+        /// <summary> 
         /// Название позиции
         /// </summary>
         [JsonPropertyName("name")]
