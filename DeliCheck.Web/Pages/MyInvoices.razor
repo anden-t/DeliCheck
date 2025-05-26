@@ -19,7 +19,7 @@
             <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "positions" })" AllowVirtualization=true Data="@_invoices" TItem="InvoiceResponseModel">
                 <Template Context="invoice">
                     <RadzenStack class="rz-my-2" Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Gap="0" @onclick="@(() => ToInvoice(invoice))">
-                        <RadzenText class="rz-mb-0" Style="font-weight: 600" Text="@($"Чек от {invoice.CreatedTime + TimeSpan.FromHours(3)}")" />
+                        <RadzenText class="rz-mb-0 rz-mr-1" Style="font-weight: 600" Text="@(invoice.Name == "Чек" ? $"Чек от {(invoice.CreatedTime + TimeSpan.FromHours(3)).ToString("d MMMM HH:mm")}" : invoice.Name)" />
                         <RadzenText class="rz-mb-0" Style="font-weight: 600" Text="@($"{invoice.TotalCost} ₽")" />
                     </RadzenStack>
                 </Template>

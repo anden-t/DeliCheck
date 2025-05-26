@@ -44,7 +44,7 @@
                     <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch">
 
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenTextBox style="width: 100%; margin-right: 0.5rem" @bind-Value=@item.Name aria-label="Название" />
+                            <RadzenTextBox style=@($"width: 100%; margin-right: 0.5rem; {((((item.Count == 1 || !item.CountInteger) ? item.UsersParts.Values.Sum() == 0 : item.UsersParts.Values.Sum() != item.Count)) ? "" : "color: green;")}") @bind-Value=@item.Name aria-label="Название" />
                             <RadzenNumeric style="max-width: 4rem; width:100%;margin-right: 0.5rem" TValue="decimal" ShowUpDown="true" f @bind-Value=@item.Count Format="@(item.CountInteger ? $"# {item.QuantityMeasure.ToShortString()}." : $"#0.0 {item.QuantityMeasure.ToShortString()}.")" aria-label="Количество" />
                             <RadzenNumeric style="max-width: 4rem; width:100%;margin-right: 0.5rem" TValue="int" ShowUpDown="false" @bind-Value=@item.Cost @oninput="@((s) => OnInputCost(item, s))" Format="# ₽" aria-label="Цена" />
                             <RadzenButton Variant="Variant.Text" Icon="delete" IconColor="red" IsBusy=@item.Deleting ButtonStyle="ButtonStyle.Danger" Click="@(() => DeleteItem(item))" />
@@ -65,7 +65,7 @@
 
                                                 <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
                                                     <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 2.4rem; height: 2.4rem;" />
-                                                    <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 69px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
+                                                    <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 63px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
                                                 </RadzenStack>
                                             </div>
                                         </Template>
@@ -93,6 +93,7 @@
         </RadzenStack>
 
         <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Разделяем..." Text="Разделить чек" Click="@CreateBills"></RadzenButton>
+        <RadzenText TextAlign="TextAlign.Center" class="rz-mt-3 rz-mb-0" Visible=@(!_processAllowed) style="font-style: italic; font-size: 0.7rem">Для разделения чека необходимо разделить все позиции!</RadzenText>
     </div>
 
 </RadzenStack>

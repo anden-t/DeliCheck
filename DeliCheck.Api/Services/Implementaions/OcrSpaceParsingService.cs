@@ -19,16 +19,16 @@ namespace DeliCheck.Api.Services.Implementaions
         /// </summary>
         //private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
         //private const string _regexPattern1 = @"(.*?)\n?(.*?)\s+(\d*?[\.,]?\d*?)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d\n]*)(\1)?(?(8)\n([А-Яа-яa-zA-Z\d ]*)\n|$)";
-        private const string _regexPattern1 = @"(.*?)(?:\r\n?|\n)?(.*?)[*^'""#`хХxX\s]+(\d*?[\.,]?\d*?)\s*?((?:(?:п|n)орций)?(?:(?:п|n)ор(?:ц|у))?(?:(?:п|n)(?:о|o)(?:р|p))?(?:(?:e|е)д)?(?:шт)?(?:мл)?(?:л)?(?:(?:г|r))?(?:(?:г|r)(?:р|p))?(?:к(?:r|г))?)[:.,\-=\s]+([-]?(\d+\s)?\d+\s?[\.,]+\s?\d\d)([^\d\n\r]*?)(\1)?(?(9)(?:\r\n?|\n)([А-Яа-яa-zA-Z\d ]*)(?:\r\n?|\n)|(?:\r\n?|\n))";
+        private const string _regexPattern1 = @"(.*?)(?:\r\n?|\n)?(.*?)[*^'""#`хХxX\s]+(\d*?[\.,]?\d*?)\s*?((?:(?:п|n)орций)?(?:(?:п|n)ор(?:ц|у))?(?:(?:п|n)(?:о|o)(?:р|p))?(?:(?:e|е)д)?(?:шт)?(?:мл)?(?:л)?(?:(?:г|r))?(?:(?:г|r)(?:р|p))?(?:к(?:r|г))?)[:.,\-=\s]+([-]?(\d+\s)?\d+\s?[\.,]+\s?\d\d)([^\d\n\r]*?)(\1)?(?(8)(?:\r\n?|\n)([А-Яа-яa-zA-Z\d ]*)(?:\r\n?|\n)|(?:\r\n?|\n))";
         /// <summary>
         /// Паттерн для вида "Наименование | Количество * Стоимость | Сумма (000.00)". Поддерживает перенос части названия на строку выше
         /// </summary>
-        private const string _regexPattern2 = @"(.*?)(?:\r\n?|\n)?(.*?)\s+(\d+[\.,]?\d*)\s*?(?:(?:п|n)орций)?(?:(?:п|n)ор(?:ц|у))?(?:(?:п|n)(?:о|o)(?:р|p))?(?:(?:e|е)д)?(?:шт)?(?:мл)?(?:л)?(?:(?:г|r))?(?:(?:г|r)(?:р|p))?(?:к(?:r|г))?[*^'""#`хХxX ]+((\d+\s)?\d+(\.|,)\d\d)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
+        private const string _regexPattern2 = @"(.*?)(?:\r\n?|\n)?(.*?)\s+(\d+[\.,]?\d*)\s*?(?:(?:п|n)орций)?(?:(?:п|n)ор(?:ц|у))?(?:(?:п|n)(?:о|o)(?:р|p))?(?:(?:e|е)д)?(?:шт)?(?:мл)?(?:л)?(?:(?:г|r))?(?:(?:г|r)(?:р|p))?(?:к(?:r|г))?[*\+^'""#`хХxX ]+((\d+\s)?\d+(\.|,)\d\d)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
         //private const string _regexPattern2 = @"(.*?)(?:\r\n?|\n)?(.*?)\s+(\d+[\.,]?\d*)\s*?(?:порций)?(?:порц)?(?:пор)?(?:шт)?(?:мл)?(?:л)?(?:г)?(?:гр)?(?:кг)?\s*?[*^'""#`хХxX]?\s*?((\d+\s)?\d+(\.|,)\d\d)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
         /// <summary>
         /// Паттерн для вида "Количество * Наименование | Сумма (000.00)"
         /// </summary>
-        private const string _regexPattern3 = @"^(\d+)\s?[*^'""#`хХxX]?(.*?)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
+        private const string _regexPattern3 = @"^(\d+)\s?[*\+^'""#`хХxX]?(.*?)\s+([-=]?(\d+\s)?\d+(\.|,)\d\d)([^\d]*?)$";
         /// <summary>
         /// Паттерн для вида "Наименование | Сумма (000)"
         /// </summary>
@@ -42,12 +42,14 @@ namespace DeliCheck.Api.Services.Implementaions
             "наличны",
             "безнал",
             "сбербанк",
-            "сумма"
+            "сумма",
+            "рубли"
         ];
-        private const string _excludeChars = "0123456789*xх-=#,. ";
+        private const string _excludeChars = "0123456789*xх-+=#,. ";
         private static readonly string[] _excludeInFirstItem = 
         {
             " счет",
+            "наименование",
             "сумма",
             "кол-во"
         };
@@ -57,20 +59,28 @@ namespace DeliCheck.Api.Services.Implementaions
         {
             text = text.Trim().Replace("=", "").Replace(")", "").Replace("(", "").Replace("\t", "    ").Replace(" пор ", "  ");
             text = Regex.Replace(text, @"НДС \d+%", " ");
-            text += "\r\n";
 
+            text = string.Join("\r\n", text.Split('\n').Select(x =>
+            {
+                var line = x.Replace("\r", "");
+                if (_excludeInFirstItem.Any(line.ToLower().Contains))
+                    return "    ";
+                else return line;
+            }));
+
+            text += "\r\n";
             Console.WriteLine(text);
 
-            var totalCost = Regex.Matches(text, _regexPatternTotal, RegexOptions.Multiline).Cast<Match>().Select(x =>
-            {
-                if (!string.IsNullOrWhiteSpace(x.Groups[1].Value) &&
-                    (x.Groups[1].Value.ToLower().Contains("итог") ||
-                    x.Groups[1].Value.ToLower().Contains("оплат") ||
-                    x.Groups[1].Value.ToLower().Contains("всего")) &&
-                    decimal.TryParse(x.Groups[2].Value.Trim().Replace(" ", "").Replace(",", ".").Replace("-", ""), CultureInfo.InvariantCulture, out decimal cost))
-                    return cost;
-                else return 0;
-            }).LastOrDefault();
+            //var totalCost = Regex.Matches(text, _regexPatternTotal, RegexOptions.Multiline).Cast<Match>().Select(x =>
+            //{
+            //    if (!string.IsNullOrWhiteSpace(x.Groups[1].Value) &&
+            //        (x.Groups[1].Value.ToLower().Contains("итог") ||
+            //        x.Groups[1].Value.ToLower().Contains("оплат") ||
+            //        x.Groups[1].Value.ToLower().Contains("всего")) &&
+            //        decimal.TryParse(x.Groups[2].Value.Trim().Replace(" ", "").Replace(",", ".").Replace("-", ""), CultureInfo.InvariantCulture, out decimal cost))
+            //        return cost;
+            //    else return 0;
+            //}).LastOrDefault();
 
             List<InvoiceItemModel> items;
 
@@ -90,7 +100,7 @@ namespace DeliCheck.Api.Services.Implementaions
             else items = itemsPattern4;
 
             decimal itemsSum = items.Sum(x => x.Cost);
-            totalCost = itemsSum;
+            var totalCost = itemsSum;
 
             return (new InvoiceModel() { Name = "Чек", TotalCost = totalCost, OcrText = text, CreatedTime = DateTime.UtcNow }, items);
         }
@@ -140,19 +150,18 @@ namespace DeliCheck.Api.Services.Implementaions
                     name = name2;
 
                     if (!string.IsNullOrWhiteSpace(name3) && !name3Lower.All(_excludeChars.Contains))
-                        name += name3;
+                        name += " " + name3;
                 }
                 else if (!string.IsNullOrWhiteSpace(name2))
                 {
-                    if (_excludeInFirstItem.Any(name1.Contains))
+                    if (_excludeInFirstItem.Any(name1.Contains) || (char.IsLetter(name1[0]) && char.IsLower(name1[0]) && char.IsLetter(name2[0]) && char.IsUpper(name2[0]) && name2.Length > name1.Length))
                         name = name2;
                     else if (name2Lower.All(_excludeChars.Contains))
                         name = name1;
                     else
                         name = name1 + " " + name2;
-
                     if (!string.IsNullOrWhiteSpace(name3) && !name3Lower.All(_excludeChars.Contains))
-                        name += name3;
+                        name += " " + name3;
                 }
                 else
                 {

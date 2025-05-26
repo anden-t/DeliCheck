@@ -17,12 +17,12 @@
 
         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
 
-            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Style="padding-right: 0.5rem;">
+            <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start"  AlignItems="AlignItems.Center" Style="padding-right: 0.5rem;" Gap="0">
 
                 <RadzenImage @bind-Path="@_profileAvatarUrl" class="rounded-image" Style="width: 100%; height: auto; max-width: 150px; min-width: 2rem;" />
-                <RadzenButton Visible="@(_selfProfile)" class="my-button rz-w-100" Text="Изменить аватар" Click="@OpenEditAvatar"></RadzenButton>
-                <RadzenButton Visible="@(_selfProfile && _hasVk)" class="my-button rz-w-100" Text="Открыть профиль ВК" Click="@OpenVk" Image="/images/vk.svg"></RadzenButton>
-                <RadzenButton Visible="@(_selfProfile && !_hasVk)" class="my-button rz-w-100" Text="Подключить профиль ВК" Click="@ConnectVk" Image="/images/vk.svg"></RadzenButton>
+                <RadzenButton Visible="@(_selfProfile)" class="my-button rz-w-100 rz-mt-3" Text="Изменить аватар" Click="@OpenEditAvatar"></RadzenButton>
+                <RadzenButton Visible="@(_selfProfile && _hasVk)" class="my-button rz-w-100 rz-mt-2" Text="Открыть профиль ВК" Click="@OpenVk" Image="/images/vk.svg"></RadzenButton>
+                <RadzenButton Visible="@(_selfProfile && !_hasVk)" class="my-button rz-w-100 rz-mt-2" Text="Подключить профиль ВК" Click="@ConnectVk" Image="/images/vk.svg"></RadzenButton>
 
             </RadzenStack>
 

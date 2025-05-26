@@ -47,7 +47,7 @@ namespace DeliCheck.Utils
             {
                 Id = model.Id,
                 InvoiceId = model.InvoiceId,
-                Items = db.BillsItems.Where(x => x.BillId == model.Id).Select(x => new BillItemResponseModel() { Cost = x.Cost, Quantity = x.Quantity, Name = x.Name }).ToList(),
+                Items = db.BillsItems.Where(x => x.BillId == model.Id).Select(x => new BillItemResponseModel() { Cost = x.Cost, Quantity = x.Quantity, QuantityMeasure = x.QuantityMeasure, Name = x.Name }).ToList(),
                 OfflineOwner = model.OfflineOwner,
                 OwnerId = model.OwnerId,
                 Payed = model.Payed,
@@ -70,7 +70,7 @@ namespace DeliCheck.Utils
                 CreatedTime = model.CreatedTime,
                 Id = model.Id,
                 FromFns = model.FromFns,
-                Items = db.InvoicesItems.Where(x => x.InvoiceId == model.Id).Select(x => new InvoiceItemResponseModel() { Cost = x.Cost, Id = x.Id, Quantity = x.Quantity, Name = x.Name }).ToList(),
+                Items = db.InvoicesItems.Where(x => x.InvoiceId == model.Id).Select(x => new InvoiceItemResponseModel() { Cost = x.Cost, Id = x.Id, Quantity = x.Quantity, QuantityMeasure = x.QuantityMeasure, Name = x.Name }).ToList(),
                 Name = model.Name,
                 OcrText = model.OcrText,
                 OcrEngine = model.OcrEngine,

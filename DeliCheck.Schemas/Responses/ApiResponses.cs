@@ -105,4 +105,9 @@ namespace DeliCheck.Schemas.Responses
         public VkAuthInfoResponse() { }
         public VkAuthInfoResponse(VkAuthInfoResponseModel response) : base(response) { }
     }
+    public class QrRedirectResponse : ApiResponse<QrRedirectResponseModel>
+    {
+        public QrRedirectResponse() { }
+        public QrRedirectResponse(QrRedirectResponseModel response) : base(response) { }
+    }
 }

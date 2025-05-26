@@ -78,7 +78,7 @@ namespace DeliCheck.Services
 
                 var result = new InvoiceModel()
                 {
-                    Name = json["data"]["json"]["retailPlaceAddress"].GetValue<string>(),
+                    Name = json["data"]["json"]["retailPlace"].GetValue<string>(),
                     FromFns = true,
                     OcrText = string.Empty,
                     TotalCost = json["data"]["json"]["totalSum"].GetValue<decimal>() / 100

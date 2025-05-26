@@ -115,6 +115,7 @@ namespace DeliCheck.Api.Controllers
                             {
                                 Cost = invoiceItem.Cost / invoiceItem.Quantity * userBillItem.Quantity,
                                 Quantity = userBillItem.Quantity,
+                                QuantityMeasure = invoiceItem.QuantityMeasure,
                                 Name = invoiceItem.Name,
                                 BillId = bill.Id
                             });

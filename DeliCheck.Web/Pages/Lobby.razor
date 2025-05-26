@@ -40,18 +40,18 @@
                 <Template Context="item">
                     <RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Stretch">
                         <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
-                            <RadzenText Text="@(item.Name)" TextAlign="TextAlign.Left" Style="font-weight: 600; width: 100%; margin: 0 1rem 0 0" />
+                            <RadzenText Text="@(item.Name)" TextAlign="TextAlign.Left" Style=@($"font-weight: 600; width: 100%; margin: 0 1rem 0 0; {((((item.Count == 1 || !item.CountInteger) ? item.UsersParts.Values.Sum() == 0 : item.UsersParts.Values.Sum() != item.Count)) ? "" : "color: green;")}") />
                             <RadzenText Text="@($"{(item.CountInteger ? ((int)item.Count).ToString() : item.Count.ToString())} {item.QuantityMeasure.ToShortString()}.")" TextAlign="TextAlign.Left" Style="max-width: 3.3rem; width:100%; margin: 0 0.5rem 0 0;" />
                             <RadzenText Text="@($"{item.Cost} ₽")" TextAlign="TextAlign.Right" Style="font-weight: 600; max-width: 4rem; width:100%; margin: 0 0 0 0;" />
                         </RadzenStack>
 
-                        <div style="overflow-x: auto; height: 70px; overflow-y: hidden;">
-                            <div style="max-width: 1000px; height: 70px">
-                                <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 1000px; height: 70px"
+                        <div style="overflow-x: auto; height: 85px; overflow-y: hidden;">
+                            <div style="max-width: 2000px; height: 70px" class="rz-mt-2">
+                                <RadzenDataList Attributes="@(new Dictionary<string, object>() { ["list"] = "users" })" Style="width: auto; max-width: 2000px; height: 70px"
                                 TItem="Friend" AllowVirtualization="false" WrapItems="true" AllowPaging="false" Data="@_selected">
 
                                     <Template Context="user">
-                                        <div class="rz-shadow-2" style="@($"{(user.Finished ? "background: var(--rz-success-lighter);" : (user.UserId == _myUserId ? "" : "background: var(--rz-base-light);"))}; transition: all 150ms ease-in-out; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 65px; width: 65px; max-width: 65px; height: 62px; margin-top: 5px")" item="true" @onclick="@((s) => OnClickUser(item, user))">
+                                        <div class="rz-shadow-2" style="@($"{(user.Finished ? "background: var(--rz-success-lighter);" : (user.UserId == _myUserId ? "" : "background: var(--rz-base-light);"))} transition: all 150ms ease-in-out; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center; border-radius: 0.5rem; min-width: 65px; width: 65px; max-width: 65px; height: 62px; margin-top: 5px;")" item="true" @onclick="@((s) => OnClickUser(item, user))">
 
                                             <div class="rz-shadow-2" style=@($"{((item.UsersParts[user] == 0) ? "" : (user.UserId == _myUserId ? "background: var(--rz-primary);" : "background: var(--rz-base);"))} transition: all 150ms ease-in-out; position: absolute; top: -5px; left:49px; z-index: 2; padding: 0.125rem 0.4rem; border-radius: 6px; width: 30px")>
                                                 <RadzenText class="rz-mb-0" Style="@($"{(item.UsersParts[user] == 0 ? "" : (user.UserId == _myUserId ? "color: var(--rz-on-primary);" : "color: var(--rz-black);"))} min-width: 16px; width: 16px; text-align: center; font-size: 0.8rem; font-weight: 600")" Text="@($"x{(item.UsersParts[user])}")" />
@@ -59,7 +59,7 @@
 
                                             <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
                                                 <RadzenImage class="rounded-image" Path="@(user.AvatarUrl)" Style="width: 2.4rem; height: 2.4rem;" />
-                                                <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 69px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
+                                                <RadzenText class="rz-mb-0" Style="font-weight: 600; font-size: 0.65rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 63px; text-align: center" Text="@($"{user.Firstname}{(string.IsNullOrWhiteSpace(user.Lastname) ? "" : $" {user.Lastname.Substring(0, 1)}.")}")" />
                                             </RadzenStack>
                                         </div>
                                     </Template>
@@ -78,6 +78,7 @@
         </RadzenStack>
 
         <RadzenButton class="rz-mt-3 my-button rz-w-100" Disabled=@(!_processAllowed) IsBusy=@_processing BusyText="Завершаем..." ButtonStyle=@_submitButtonStyle Text=@_submitButtonText Click="@CreateBills"></RadzenButton>
+        <RadzenText TextAlign="TextAlign.Center" class="rz-mt-3 rz-mb-0" Visible=@(!_processAllowed) style="font-style: italic; font-size: 0.7rem">Для разделения чека все участники должны выбрать все свои позиции (нажать кнопку)</RadzenText>
     </div>
 
 </RadzenStack>
@@ -272,8 +273,8 @@
                     }
 
                     _processAllowed = _selected.Any(x => x.UserId == _myUserId && x.Finished) || _items.Any(x => x.UsersParts.Any(x => x.Key.UserId == _myUserId && x.Value > 0));
-                        
-                 }
+
+                }
             }
             catch (Exception ex)
             {
@@ -412,12 +413,16 @@
 
     private async Task Share()
     {
-        if (!await _webShareService.IsSupportedAsync())
+        try
         {
-            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Info, Summary = "Ваш браузер не поддерживает функцию \"Поделиться\"", Detail = "Просто скопируйте ссылку", Duration = 4000 });
-            return;
-        }
+            if (!await _webShareService.IsSupportedAsync())
+            {
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Info, Summary = "Ваш браузер не поддерживает функцию \"Поделиться\"", Detail = "Просто скопируйте ссылку", Duration = 4000 });
+                return;
+            }
 
-        await _webShareService.ShareAsync(new ShareData() { Text = "Разделите чек со мной: ", Title = "ДелиЧек", Url = $"{Program.SiteUrl}lobby?id={Id}" });
+            await _webShareService.ShareAsync(new ShareData() { Text = "Разделите чек со мной: ", Title = "ДелиЧек", Url = $"{Program.SiteUrl}lobby?id={Id}" });
+        }
+        catch { }
     }
 }

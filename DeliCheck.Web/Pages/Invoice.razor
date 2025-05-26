@@ -29,7 +29,7 @@
         </RadzenDataGrid>
 
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="0">
-            <RadzenText class="rz-mb-5" TextAlign="TextAlign.Right" Text="@_textPayed"></RadzenText>
+            <RadzenText class="rz-mb-5" TextAlign="TextAlign.Left" Text="@_textPayed"></RadzenText>
             <RadzenText class="rz-mb-5" TextAlign="TextAlign.Right" Style="font-weight: 600" Text="@_textTotal"></RadzenText>
         </RadzenStack>
 
@@ -162,13 +162,18 @@
 
     private async Task Share()
     {
-        if (!await _webShareService.IsSupportedAsync())
+        try
         {
-            _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Info, Summary = "Ваш браузер не поддерживает функцию \"Поделиться\"", Detail = "Просто скопируйте ссылку", Duration = 4000 });
-            return;
-        }
+            if (!await _webShareService.IsSupportedAsync())
+            {
+                _notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Info, Summary = "Ваш браузер не поддерживает функцию \"Поделиться\"", Detail = "Просто скопируйте ссылку", Duration = 4000 });
+                return;
+            }
 
-        await _webShareService.ShareAsync(new ShareData() { Text = "Text", Title = "title", Url = $"{Program.SiteUrl}invoice?id={Id}" });
+            await _webShareService.ShareAsync(new ShareData() { Text = "Посмотрите, кто сколько должен: ", Title = "Разделенный чек", Url = $"{Program.SiteUrl}invoice?id={Id}" });
+            
+        }
+        catch { }
     }
 }
         @* <Template Context="item">

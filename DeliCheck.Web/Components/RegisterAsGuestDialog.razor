@@ -17,7 +17,6 @@
             </RadzenFormField>
         </div>
 
-
         <RadzenButton class="rz-mb-0 my-button" @bind-Disabled=@_registerDisabled IsBusy=@_registerBusy BusyText="Регистрируемся..." Click=@Reg Text="Продолжить" ButtonStyle="ButtonStyle.Primary" />
 
         <div class="rz-my-2" style="display: flex; justify-content: center; align-items: center;">
@@ -37,6 +36,12 @@
 
     [Parameter]
     public int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _registerDisabled = false;
+        await InvokeAsync(() => StateHasChanged());
+    }
 
     private async void FirstnameChanged(string firstname)
     {

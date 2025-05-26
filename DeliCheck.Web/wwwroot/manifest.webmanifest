@@ -1,6 +1,6 @@
 {
-  "name": "DeliCheck.Web",
-  "short_name": "DeliCheck.Web",
+  "name": "ДелиЧек",
+  "short_name": "ДелиЧек",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

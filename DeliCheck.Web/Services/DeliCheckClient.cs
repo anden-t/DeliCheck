@@ -261,6 +261,8 @@ namespace DeliCheck.Web.Services
         public async Task<BillsListResponseModel> GetBills(int invoiceId) => await GetJson<BillsListResponseModel>($"/bills/get?invoiceId={invoiceId}", false);
         public async Task<BillsListResponseModel> ListMyBills(int invoiceId) => await GetJson<BillsListResponseModel>($"/bills/list", true);
 
+        public async Task<QrRedirectResponseModel> GetQrRedirect() => await GetJson<QrRedirectResponseModel>("/qr-redirect", false);
+
         public async Task<VkAuthResponseModel> Vk() => await GetJson<VkAuthResponseModel>("/auth/vk", false);
         public async Task<VkAuthResponseModel> Vk(string returnUrl) => await GetJson<VkAuthResponseModel>($"/auth/vk?returnUrl={HttpUtility.UrlEncode(returnUrl)}", false);
         public async Task<VkAuthResponseModel> VkConnect() => await GetJson<VkAuthResponseModel>("/auth/vk-connect", true);
